@@ -26,7 +26,8 @@ dist
 .env.production.local
 
 # IDE
-.vscode
+.vscode/*
+!.vscode/settings.json
 .idea
 *.swp
 *.swo
@@ -41,4 +42,3 @@ Thumbs.db
 
 # pnpm
 .pnpm-store
-

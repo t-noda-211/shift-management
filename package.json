@@ -10,6 +10,7 @@
     "type-check": "pnpm -r type-check"
   },
   "devDependencies": {
+    "prettier": "^3.7.4",
     "typescript": "^5.3.3"
   },
   "engines": {
@@ -17,4 +18,3 @@
     "pnpm": ">=8.0.0"
   }
 }
-
