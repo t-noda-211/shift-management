@@ -1,9 +1,9 @@
 import { ulid, isValid as isValidUlid } from 'ulidx'
+import { ValueObjectError } from './valueObjectError'
 
-export class InvalidShiftAssignmentIdError extends Error {
+export class InvalidShiftAssignmentIdError extends ValueObjectError {
   constructor() {
     super('Invalid ShiftAssignment ID')
-    this.name = 'InvalidShiftAssignmentIdError'
   }
 }
 
