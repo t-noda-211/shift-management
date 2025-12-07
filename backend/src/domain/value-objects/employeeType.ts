@@ -3,7 +3,7 @@ import { ValueObjectError } from './valueObjectError'
 /**
  * 従業員種別の表示名の型
  */
-export type EmployeeTypeValue = '社員' | '派遣'
+export type EmployeeTypeName = '社員' | '派遣'
 
 /**
  * 従業員種別のコードの型
@@ -22,11 +22,11 @@ export class InvalidEmployeeTypeError extends ValueObjectError {
  */
 export class EmployeeType {
   readonly code: EmployeeTypeCode
-  readonly value: EmployeeTypeValue
+  readonly name: EmployeeTypeName
 
   private static readonly CODE_TO_VALUE: Record<
     EmployeeTypeCode,
-    EmployeeTypeValue
+    EmployeeTypeName
   > = {
     REGULAR: '社員',
     DISPATCHED: '派遣',
@@ -36,7 +36,7 @@ export class EmployeeType {
 
   private constructor(code: EmployeeTypeCode) {
     this.code = code
-    this.value = EmployeeType.CODE_TO_VALUE[code]
+    this.name = EmployeeType.CODE_TO_VALUE[code]
   }
 
   /**

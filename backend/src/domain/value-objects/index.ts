@@ -4,7 +4,7 @@ export { EmployeeId } from './employeeId'
 export { EmployeeFullName } from './employeeFullName'
 export {
   EmployeeType,
-  type EmployeeTypeValue,
+  type EmployeeTypeName,
   type EmployeeTypeCode,
 } from './employeeType'
 export { ShiftScheduleId } from './shiftScheduleId'
