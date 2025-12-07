@@ -20,4 +20,22 @@ export class InvalidEmployeeFullNameError extends ValueObjectError {
 }
 ```
 
+## エンティティ（集約）
+
+### エラーハンドリング
+
+エンティティのカスタムエラーは、すべて `AggregateError` 基底クラスを継承する必要があります。
+
+例
+
+```typescript
+import { AggregateError } from '../aggregateError'
+
+export class EndTimeMustBeAfterStartTimeError extends AggregateError {
+  constructor() {
+    super('End time must be after start time')
+  }
+}
+```
+
 これにより、エラーハンドリングが統一され、将来的な拡張も容易になります。
