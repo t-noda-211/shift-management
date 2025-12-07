@@ -17,13 +17,27 @@ export class EndTimeMustBeAfterStartTimeError extends AggregateError {
  * シフト区分（早番・遅番など）を表す集約ルート
  */
 export class ShiftType {
-  constructor(
+  private constructor(
     public readonly id: ShiftTypeId,
     public readonly name: ShiftTypeName,
     public readonly startTime: ShiftTypeTime,
     public readonly endTime: ShiftTypeTime
-  ) {
-    // 終業時間は始業時間より後でなければならない
+  ) {}
+
+  static create(
+    name: ShiftTypeName,
+    startTime: ShiftTypeTime,
+    endTime: ShiftTypeTime
+  ): ShiftType {
+    ShiftType.validateEndTimeMustBeAfterStartTime(startTime, endTime)
+    const id = ShiftTypeId.create()
+    return new ShiftType(id, name, startTime, endTime)
+  }
+
+  private static validateEndTimeMustBeAfterStartTime(
+    startTime: ShiftTypeTime,
+    endTime: ShiftTypeTime
+  ): void {
     if (endTime.toMinutes() <= startTime.toMinutes()) {
       throw new EndTimeMustBeAfterStartTimeError()
     }
