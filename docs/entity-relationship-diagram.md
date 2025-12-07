@@ -15,15 +15,11 @@ erDiagram
     %% ShiftSchedule集約
     ShiftSchedule
     ShiftAssignment
-    TimeOff
     ShiftNotice
 
-    Employee ||--o{ ShiftSchedule : ""
     ShiftType ||--o{ ShiftSchedule : ""
     ShiftSchedule ||--o{ ShiftAssignment: ""
     Employee ||--o{ ShiftAssignment: ""
-    ShiftSchedule ||--o{ TimeOff: ""
-    Employee ||--o{ TimeOff: ""
     ShiftSchedule ||--o{ ShiftNotice: ""
 ```
 
@@ -39,7 +35,7 @@ erDiagram
 
 シフト区分（集約ルート）
 
-早番・遅番などシフトの種類を表すエンティティ。
+早番・遅番・公休などシフトの種類を表すエンティティ。
 
 ### ShiftSchedule
 
@@ -55,15 +51,7 @@ erDiagram
 
 シフトアサイン
 
-従業員に対するシフトのアサイン情報を表すエンティティ。
-
-### TimeOff
-
-休日
-
-従業員に対する休日の情報を表すエンティティ。
-
-TimeOffTypeで公休や有給を表現する。
+従業員のシフト状態を表すエンティティ。
 
 ### ShiftNotice
 
