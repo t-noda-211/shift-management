@@ -6,6 +6,18 @@
 
 ```mermaid
 erDiagram
+    %% Employee集約
+    Employee
+
+    %% ShiftType集約
+    ShiftType
+
+    %% ShiftSchedule集約
+    ShiftSchedule
+    ShiftAssignment
+    TimeOff
+    ShiftNotice
+
     Employee ||--o{ ShiftSchedule : ""
     ShiftType ||--o{ ShiftSchedule : ""
     ShiftSchedule ||--o{ ShiftAssignment: ""
@@ -17,27 +29,27 @@ erDiagram
 
 ## エンティティ詳細
 
+### Employee
+
+従業員（集約ルート）
+
+従業員情報を表すエンティティ。
+
+### ShiftType
+
+シフト区分（集約ルート）
+
+早番・遅番などシフトの種類を表すエンティティ。
+
 ### ShiftSchedule
 
-シフトスケジュール
+シフトスケジュール（集約ルート）
 
 シフト全体を表すエンティティ。
 
 #### ルール
 
 - 1ヶ月に1つ存在する
-
-### Employee
-
-従業員
-
-従業員情報を表すエンティティ。
-
-### ShiftType
-
-シフト区分
-
-早番・遅番などシフトの種類を表すエンティティ。
 
 ### ShiftAssignment
 
