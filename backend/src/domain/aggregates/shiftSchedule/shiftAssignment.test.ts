@@ -23,8 +23,8 @@ describe('ShiftAssignment', () => {
     it('勤務区分を参照するシフトアサインを作成できる', () => {
       const assignment = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
 
@@ -41,14 +41,14 @@ describe('ShiftAssignment', () => {
     it('毎回新しいIDが生成される', () => {
       const assignment1 = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
       const assignment2 = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
 
@@ -62,8 +62,8 @@ describe('ShiftAssignment', () => {
       const endTime = new ShiftTypeTime('18:00')
       const assignment = ShiftAssignment.createWithCustomTime(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         startTime,
         endTime
       )
@@ -85,8 +85,8 @@ describe('ShiftAssignment', () => {
       expect(() => {
         ShiftAssignment.createWithCustomTime(
           shiftScheduleId,
-          employeeId,
           date,
+          employeeId,
           startTime,
           endTime
         )
@@ -100,8 +100,8 @@ describe('ShiftAssignment', () => {
       expect(() => {
         ShiftAssignment.createWithCustomTime(
           shiftScheduleId,
-          employeeId,
           date,
+          employeeId,
           startTime,
           endTime
         )
@@ -114,8 +114,8 @@ describe('ShiftAssignment', () => {
       const timeOffType = TimeOffType.publicHoliday()
       const assignment = ShiftAssignment.createWithTimeOff(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         timeOffType
       )
 
@@ -133,8 +133,8 @@ describe('ShiftAssignment', () => {
       const timeOffType = TimeOffType.paidLeave()
       const assignment = ShiftAssignment.createWithTimeOff(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         timeOffType
       )
 
@@ -151,8 +151,8 @@ describe('ShiftAssignment', () => {
         const assignment = ShiftAssignment.reconstruct(
           id,
           shiftScheduleId,
-          employeeId,
           date,
+          employeeId,
           shiftTypeId,
           null,
           null,
@@ -173,8 +173,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             shiftTypeId,
             startTime,
             null,
@@ -190,8 +190,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             shiftTypeId,
             null,
             endTime,
@@ -207,8 +207,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             shiftTypeId,
             null,
             null,
@@ -224,8 +224,8 @@ describe('ShiftAssignment', () => {
         const assignment = ShiftAssignment.reconstruct(
           id,
           shiftScheduleId,
-          employeeId,
           date,
+          employeeId,
           null,
           null,
           null,
@@ -247,8 +247,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             startTime,
             null,
@@ -265,8 +265,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             null,
             endTime,
@@ -283,8 +283,8 @@ describe('ShiftAssignment', () => {
         const assignment = ShiftAssignment.reconstruct(
           id,
           shiftScheduleId,
-          employeeId,
           date,
+          employeeId,
           null,
           startTime,
           endTime,
@@ -305,8 +305,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             startTime,
             null,
@@ -322,8 +322,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             null,
             endTime,
@@ -340,8 +340,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             startTime,
             endTime,
@@ -358,8 +358,8 @@ describe('ShiftAssignment', () => {
           ShiftAssignment.reconstruct(
             id,
             shiftScheduleId,
-            employeeId,
             date,
+            employeeId,
             null,
             startTime,
             endTime,
@@ -374,8 +374,8 @@ describe('ShiftAssignment', () => {
     it('勤務区分を参照するシフトの場合、trueを返す', () => {
       const assignment = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
 
@@ -385,8 +385,8 @@ describe('ShiftAssignment', () => {
     it('カスタムシフトの場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithCustomTime(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         new ShiftTypeTime('09:00'),
         new ShiftTypeTime('18:00')
       )
@@ -397,8 +397,8 @@ describe('ShiftAssignment', () => {
     it('休暇の場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithTimeOff(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         TimeOffType.publicHoliday()
       )
 
@@ -410,8 +410,8 @@ describe('ShiftAssignment', () => {
     it('カスタムシフトの場合、trueを返す', () => {
       const assignment = ShiftAssignment.createWithCustomTime(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         new ShiftTypeTime('09:00'),
         new ShiftTypeTime('18:00')
       )
@@ -422,8 +422,8 @@ describe('ShiftAssignment', () => {
     it('勤務区分を参照するシフトの場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
 
@@ -433,8 +433,8 @@ describe('ShiftAssignment', () => {
     it('休暇の場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithTimeOff(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         TimeOffType.publicHoliday()
       )
 
@@ -446,8 +446,8 @@ describe('ShiftAssignment', () => {
     it('休暇の場合、trueを返す', () => {
       const assignment = ShiftAssignment.createWithTimeOff(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         TimeOffType.publicHoliday()
       )
 
@@ -457,8 +457,8 @@ describe('ShiftAssignment', () => {
     it('勤務区分を参照するシフトの場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithShiftType(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId
       )
 
@@ -468,8 +468,8 @@ describe('ShiftAssignment', () => {
     it('カスタムシフトの場合、falseを返す', () => {
       const assignment = ShiftAssignment.createWithCustomTime(
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         new ShiftTypeTime('09:00'),
         new ShiftTypeTime('18:00')
       )

@@ -56,8 +56,8 @@ export class ShiftAssignment {
   private constructor(
     public readonly id: ShiftAssignmentId,
     public readonly shiftScheduleId: ShiftScheduleId,
-    public readonly employeeId: EmployeeId,
     public readonly date: ShiftAssignmentDate,
+    public readonly employeeId: EmployeeId,
     public readonly shiftTypeId: ShiftTypeId | null,
     public readonly customStartTime: ShiftTypeTime | null,
     public readonly customEndTime: ShiftTypeTime | null,
@@ -69,16 +69,16 @@ export class ShiftAssignment {
    */
   static createWithShiftType(
     shiftScheduleId: ShiftScheduleId,
-    employeeId: EmployeeId,
     date: ShiftAssignmentDate,
+    employeeId: EmployeeId,
     shiftTypeId: ShiftTypeId
   ): ShiftAssignment {
     const id = ShiftAssignmentId.create()
     return new ShiftAssignment(
       id,
       shiftScheduleId,
-      employeeId,
       date,
+      employeeId,
       shiftTypeId,
       null,
       null,
@@ -91,8 +91,8 @@ export class ShiftAssignment {
    */
   static createWithCustomTime(
     shiftScheduleId: ShiftScheduleId,
-    employeeId: EmployeeId,
     date: ShiftAssignmentDate,
+    employeeId: EmployeeId,
     customStartTime: ShiftTypeTime,
     customEndTime: ShiftTypeTime
   ): ShiftAssignment {
@@ -104,8 +104,8 @@ export class ShiftAssignment {
     return new ShiftAssignment(
       id,
       shiftScheduleId,
-      employeeId,
       date,
+      employeeId,
       null,
       customStartTime,
       customEndTime,
@@ -118,16 +118,16 @@ export class ShiftAssignment {
    */
   static createWithTimeOff(
     shiftScheduleId: ShiftScheduleId,
-    employeeId: EmployeeId,
     date: ShiftAssignmentDate,
+    employeeId: EmployeeId,
     timeOffType: TimeOffType
   ): ShiftAssignment {
     const id = ShiftAssignmentId.create()
     return new ShiftAssignment(
       id,
       shiftScheduleId,
-      employeeId,
       date,
+      employeeId,
       null,
       null,
       null,
@@ -141,8 +141,8 @@ export class ShiftAssignment {
   static reconstruct(
     id: ShiftAssignmentId,
     shiftScheduleId: ShiftScheduleId,
-    employeeId: EmployeeId,
     date: ShiftAssignmentDate,
+    employeeId: EmployeeId,
     shiftTypeId: ShiftTypeId | null,
     customStartTime: ShiftTypeTime | null,
     customEndTime: ShiftTypeTime | null,
@@ -160,8 +160,8 @@ export class ShiftAssignment {
       return new ShiftAssignment(
         id,
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         shiftTypeId,
         null,
         null,
@@ -177,8 +177,8 @@ export class ShiftAssignment {
       return new ShiftAssignment(
         id,
         shiftScheduleId,
-        employeeId,
         date,
+        employeeId,
         null,
         null,
         null,
@@ -197,8 +197,8 @@ export class ShiftAssignment {
     return new ShiftAssignment(
       id,
       shiftScheduleId,
-      employeeId,
       date,
+      employeeId,
       null,
       customStartTime,
       customEndTime,
