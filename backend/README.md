@@ -39,3 +39,9 @@ export class EndTimeMustBeAfterStartTimeError extends AggregateError {
 ```
 
 これにより、エラーハンドリングが統一され、将来的な拡張も容易になります。
+
+## テスト
+
+### 作成基準
+
+個人開発であることと、スピードを重視するため、簡単なロジックしかないコンポーネントに関してはテストは作成しない
