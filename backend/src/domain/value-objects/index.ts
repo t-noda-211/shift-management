@@ -8,9 +8,16 @@ export {
   type EmployeeTypeCode,
 } from './employeeType'
 export { ShiftScheduleId } from './shiftScheduleId'
+export { ShiftScheduleYear } from './shiftScheduleYear'
+export { ShiftScheduleMonth } from './shiftScheduleMonth'
 export { ShiftAssignmentId } from './shiftAssignmentId'
+export { ShiftAssignmentDate } from './shiftAssignmentDate'
 export { ShiftNoticeId } from './shiftNoticeId'
-export { TimeOffId } from './timeOffId'
+export {
+  TimeOffType,
+  type TimeOffTypeName,
+  type TimeOffTypeCode,
+} from './timeOffType'
 export { ShiftTypeId } from './shiftTypeId'
 export { ShiftTypeName } from './shiftTypeName'
 export { ShiftTypeTime } from './shiftTypeTime'
