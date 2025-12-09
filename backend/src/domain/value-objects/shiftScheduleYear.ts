@@ -1,0 +1,30 @@
+import { ValueObjectError } from './valueObjectError'
+
+export class InvalidShiftScheduleYearError extends ValueObjectError {
+  constructor() {
+    super(
+      `Shift Schedule Year must be between ${ShiftScheduleYear.MIN_YEAR} and ${ShiftScheduleYear.MAX_YEAR}`
+    )
+  }
+}
+
+/**
+ * シフトスケジュールの年を表す値オブジェクト
+ */
+export class ShiftScheduleYear {
+  readonly value: number
+
+  static readonly MIN_YEAR = 2026
+  static readonly MAX_YEAR = 2100
+
+  constructor(value: number) {
+    if (
+      !Number.isInteger(value) ||
+      value < ShiftScheduleYear.MIN_YEAR ||
+      value > ShiftScheduleYear.MAX_YEAR
+    ) {
+      throw new InvalidShiftScheduleYearError()
+    }
+    this.value = value
+  }
+}

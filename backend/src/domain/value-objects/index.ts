@@ -21,3 +21,5 @@ export {
 export { ShiftTypeId } from './shiftTypeId'
 export { ShiftTypeName } from './shiftTypeName'
 export { ShiftTypeTime } from './shiftTypeTime'
+export { CreatedAt, InvalidCreatedAtError } from './createdAt'
+export { UpdatedAt, InvalidUpdatedAtError } from './updatedAt'

@@ -1,13 +1,90 @@
 import { ShiftScheduleId } from '@/domain/value-objects/shiftScheduleId'
+import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
+import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
+import { ShiftAssignment } from './shiftAssignment'
+import { ShiftNotice } from './shiftNotice'
+import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
+import { EmployeeId } from '@/domain/value-objects/employeeId'
+import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
+import { CreatedAt } from '@/domain/value-objects/createdAt'
+import { UpdatedAt } from '@/domain/value-objects/updatedAt'
+
+export class CannotEditPastShiftScheduleError extends AggregateError {
+  constructor() {
+    super('Cannot edit past shift schedule')
+  }
+}
 
 /**
  * ShiftSchedule エンティティ
  * シフト全体を表す集約ルート
- * 1ヶ月に1つ存在する
  */
 export class ShiftSchedule {
-  constructor(
-    public readonly id: ShiftScheduleId
-    // その他のプロパティは後で追加
+  private constructor(
+    public readonly id: ShiftScheduleId,
+    public readonly year: ShiftScheduleYear,
+    public readonly month: ShiftScheduleMonth,
+    private _isPublished: boolean = false,
+    public readonly shiftAssignments: ShiftAssignment[] = [],
+    public readonly shiftNotices: ShiftNotice[] = [],
+    public readonly createdAt: CreatedAt = CreatedAt.now(),
+    private _updatedAt: UpdatedAt = UpdatedAt.now()
   ) {}
+
+  get isPublished(): boolean {
+    return this._isPublished
+  }
+
+  get updatedAt(): UpdatedAt {
+    return this._updatedAt
+  }
+
+  static create(
+    year: ShiftScheduleYear,
+    month: ShiftScheduleMonth
+  ): ShiftSchedule {
+    const id = ShiftScheduleId.create()
+    return new ShiftSchedule(id, year, month)
+  }
+
+  /**
+   * 従業員にシフトをアサインする
+   */
+  assignShift(
+    shiftAssignmentDate: ShiftAssignmentDate,
+    employeeId: EmployeeId,
+    shiftTypeId: ShiftTypeId
+  ): void {
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+    const shiftAssignment = ShiftAssignment.createWithShiftType(
+      this.id,
+      shiftAssignmentDate,
+      employeeId,
+      shiftTypeId
+    )
+    this.shiftAssignments.push(shiftAssignment)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * このシフトスケジュールが過去（今日より前）の年月かどうかを判定する
+   * @returns trueなら過去
+   */
+  private isPast(): boolean {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    const scheduleYear = this.year.value
+    const scheduleMonth = this.month.value
+
+    if (scheduleYear < currentYear) {
+      return true
+    }
+    if (scheduleYear === currentYear && scheduleMonth < currentMonth) {
+      return true
+    }
+    return false
+  }
 }
