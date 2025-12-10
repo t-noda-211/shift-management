@@ -97,11 +97,11 @@ export class ShiftSchedule {
   }
 
   /**
-   * 従業員の特定の日付のシフトアサインを解除する
+   * 従業員の特定の日付のアサインを解除する（勤務か休みかに関わらず）
    * @param shiftAssignmentDate アサイン日
    * @param employeeId 従業員ID
    */
-  unassignShift(
+  unassign(
     shiftAssignmentDate: ShiftAssignmentDate,
     employeeId: EmployeeId
   ): void {

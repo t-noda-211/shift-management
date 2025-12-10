@@ -199,7 +199,7 @@ describe('ShiftSchedule', () => {
     })
   })
 
-  describe('unassignShift', () => {
+  describe('unassign', () => {
     it('正常にシフトアサインを解除できる', () => {
       const year = new ShiftScheduleYear(getFutureYear())
       const month = new ShiftScheduleMonth(getFutureMonth())
@@ -213,7 +213,7 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date, employeeId, shiftTypeId)
       expect(schedule.shiftAssignments).toHaveLength(1)
 
-      schedule.unassignShift(date, employeeId)
+      schedule.unassign(date, employeeId)
       expect(schedule.shiftAssignments).toHaveLength(0)
     })
 
@@ -232,7 +232,7 @@ describe('ShiftSchedule', () => {
 
       // 少し待ってから解除（updatedAtの更新を確認するため）
       await new Promise((resolve) => setTimeout(resolve, 10))
-      schedule.unassignShift(date, employeeId)
+      schedule.unassign(date, employeeId)
 
       // Temporal.Instantの比較を使用
       const comparison = Temporal.Instant.compare(
@@ -252,7 +252,7 @@ describe('ShiftSchedule', () => {
       )
 
       expect(() => {
-        schedule.unassignShift(date, employeeId)
+        schedule.unassign(date, employeeId)
       }).toThrow(ShiftAssignmentNotFoundError)
     })
 
@@ -270,7 +270,7 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date, employeeId1, shiftTypeId)
 
       expect(() => {
-        schedule.unassignShift(date, employeeId2)
+        schedule.unassign(date, employeeId2)
       }).toThrow(ShiftAssignmentNotFoundError)
     })
 
@@ -290,7 +290,7 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date1, employeeId, shiftTypeId)
 
       expect(() => {
-        schedule.unassignShift(date2, employeeId)
+        schedule.unassign(date2, employeeId)
       }).toThrow(ShiftAssignmentNotFoundError)
     })
 
@@ -315,7 +315,7 @@ describe('ShiftSchedule', () => {
         )
 
         expect(() => {
-          schedule.unassignShift(date, employeeId)
+          schedule.unassign(date, employeeId)
         }).toThrow(CannotEditPastShiftScheduleError)
       })
     })
