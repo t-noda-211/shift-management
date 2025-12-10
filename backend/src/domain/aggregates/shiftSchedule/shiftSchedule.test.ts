@@ -468,6 +468,124 @@ describe('ShiftSchedule', () => {
     })
   })
 
+  describe('publish', () => {
+    it('シフトスケジュールを公開できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      expect(schedule.isPublished).toBe(false)
+
+      schedule.publish()
+
+      expect(schedule.isPublished).toBe(true)
+    })
+
+    it('公開後にupdatedAtが更新される', async () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const initialUpdatedAt = schedule.updatedAt
+
+      // 少し待ってから公開（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.publish()
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        initialUpdatedAt.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('既に公開されている場合でもエラーを投げずに処理できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      schedule.publish()
+      expect(schedule.isPublished).toBe(true)
+
+      // 再度公開してもエラーが発生しない
+      expect(() => {
+        schedule.publish()
+      }).not.toThrow()
+
+      expect(schedule.isPublished).toBe(true)
+    })
+  })
+
+  describe('unpublish', () => {
+    it('シフトスケジュールを非公開にできる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      schedule.publish()
+      expect(schedule.isPublished).toBe(true)
+
+      schedule.unpublish()
+
+      expect(schedule.isPublished).toBe(false)
+    })
+
+    it('非公開後にupdatedAtが更新される', async () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      schedule.publish()
+      const updatedAtAfterPublish = schedule.updatedAt
+
+      // 少し待ってから非公開（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.unpublish()
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        updatedAtAfterPublish.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('既に非公開の場合でもエラーを投げずに処理できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      expect(schedule.isPublished).toBe(false)
+
+      // 非公開にしてもエラーが発生しない
+      expect(() => {
+        schedule.unpublish()
+      }).not.toThrow()
+
+      expect(schedule.isPublished).toBe(false)
+    })
+
+    it('公開と非公開を繰り返し切り替えできる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+
+      expect(schedule.isPublished).toBe(false)
+
+      schedule.publish()
+      expect(schedule.isPublished).toBe(true)
+
+      schedule.unpublish()
+      expect(schedule.isPublished).toBe(false)
+
+      schedule.publish()
+      expect(schedule.isPublished).toBe(true)
+
+      schedule.unpublish()
+      expect(schedule.isPublished).toBe(false)
+    })
+  })
+
   describe('updatedAt', () => {
     it('更新日時を取得できる', () => {
       const year = new ShiftScheduleYear(getFutureYear())

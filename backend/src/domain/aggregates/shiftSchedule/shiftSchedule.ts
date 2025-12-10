@@ -153,6 +153,28 @@ export class ShiftSchedule {
   }
 
   /**
+   * シフトスケジュールを公開する
+   */
+  publish(): void {
+    if (this._isPublished) {
+      return
+    }
+    this._isPublished = true
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * シフトスケジュールを非公開にする
+   */
+  unpublish(): void {
+    if (!this._isPublished) {
+      return
+    }
+    this._isPublished = false
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
    * このシフトスケジュールが過去（今日より前）の年月かどうかを判定する
    * @returns trueなら過去
    */
