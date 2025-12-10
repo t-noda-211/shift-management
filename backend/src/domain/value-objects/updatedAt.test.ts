@@ -102,4 +102,26 @@ describe('UpdatedAt', () => {
       expect(zonedDateTime.minute).toBe(30)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const updatedAt = new UpdatedAt('2024-01-15T10:30:00Z')
+
+      expect(updatedAt.equals(updatedAt)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const updatedAt1 = new UpdatedAt('2024-01-15T10:30:00Z')
+      const updatedAt2 = new UpdatedAt('2024-01-15T10:30:00Z')
+
+      expect(updatedAt1.equals(updatedAt2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const updatedAt1 = new UpdatedAt('2024-01-15T10:30:00Z')
+      const updatedAt2 = new UpdatedAt('2024-01-16T10:30:00Z')
+
+      expect(updatedAt1.equals(updatedAt2)).toBe(false)
+    })
+  })
 })

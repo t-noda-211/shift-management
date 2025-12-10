@@ -76,4 +76,26 @@ describe('EmployeeType', () => {
       expect(employeeType.isDispatched()).toBe(false)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const employeeType = EmployeeType.regular()
+
+      expect(employeeType.equals(employeeType)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const employeeType1 = EmployeeType.regular()
+      const employeeType2 = EmployeeType.regular()
+
+      expect(employeeType1.equals(employeeType2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const employeeType1 = EmployeeType.regular()
+      const employeeType2 = EmployeeType.dispatched()
+
+      expect(employeeType1.equals(employeeType2)).toBe(false)
+    })
+  })
 })

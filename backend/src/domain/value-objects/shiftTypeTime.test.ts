@@ -100,4 +100,26 @@ describe('ShiftTypeTime', () => {
       expect(time.toMinutes()).toBe(1439)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const time = new ShiftTypeTime('09:00')
+
+      expect(time.equals(time)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const time1 = new ShiftTypeTime('09:00')
+      const time2 = new ShiftTypeTime('09:00')
+
+      expect(time1.equals(time2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const time1 = new ShiftTypeTime('09:00')
+      const time2 = new ShiftTypeTime('10:00')
+
+      expect(time1.equals(time2)).toBe(false)
+    })
+  })
 })

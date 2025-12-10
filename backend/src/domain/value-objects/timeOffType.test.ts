@@ -76,4 +76,26 @@ describe('TimeOffType', () => {
       expect(timeOffType.isPaidLeave()).toBe(false)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const timeOffType = TimeOffType.publicHoliday()
+
+      expect(timeOffType.equals(timeOffType)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const timeOffType1 = TimeOffType.publicHoliday()
+      const timeOffType2 = TimeOffType.publicHoliday()
+
+      expect(timeOffType1.equals(timeOffType2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const timeOffType1 = TimeOffType.publicHoliday()
+      const timeOffType2 = TimeOffType.paidLeave()
+
+      expect(timeOffType1.equals(timeOffType2)).toBe(false)
+    })
+  })
 })

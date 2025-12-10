@@ -162,4 +162,26 @@ describe('ShiftAssignmentDate', () => {
       expect(date.getDay()).toBe(29)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const date = new ShiftAssignmentDate('2024-01-15')
+
+      expect(date.equals(date)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const date1 = new ShiftAssignmentDate('2024-01-15')
+      const date2 = new ShiftAssignmentDate('2024-01-15')
+
+      expect(date1.equals(date2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const date1 = new ShiftAssignmentDate('2024-01-15')
+      const date2 = new ShiftAssignmentDate('2024-01-16')
+
+      expect(date1.equals(date2)).toBe(false)
+    })
+  })
 })

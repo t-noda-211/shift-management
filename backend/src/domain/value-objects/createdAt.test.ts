@@ -81,4 +81,26 @@ describe('CreatedAt', () => {
       expect(zonedDateTime.minute).toBe(30)
     })
   })
+
+  describe('equals', () => {
+    it('同じインスタンスの場合、trueを返す', () => {
+      const createdAt = new CreatedAt('2024-01-15T10:30:00Z')
+
+      expect(createdAt.equals(createdAt)).toBe(true)
+    })
+
+    it('同じ値を持つ別のインスタンスの場合、trueを返す', () => {
+      const createdAt1 = new CreatedAt('2024-01-15T10:30:00Z')
+      const createdAt2 = new CreatedAt('2024-01-15T10:30:00Z')
+
+      expect(createdAt1.equals(createdAt2)).toBe(true)
+    })
+
+    it('異なる値を持つ場合、falseを返す', () => {
+      const createdAt1 = new CreatedAt('2024-01-15T10:30:00Z')
+      const createdAt2 = new CreatedAt('2024-01-16T10:30:00Z')
+
+      expect(createdAt1.equals(createdAt2)).toBe(false)
+    })
+  })
 })
