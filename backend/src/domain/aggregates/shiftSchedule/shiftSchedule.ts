@@ -9,9 +9,30 @@ import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
 import { CreatedAt } from '@/domain/value-objects/createdAt'
 import { UpdatedAt } from '@/domain/value-objects/updatedAt'
 
+/**
+ * 過去のシフトスケジュールは編集できないエラー
+ */
 export class CannotEditPastShiftScheduleError extends AggregateError {
   constructor() {
     super('Cannot edit past shift schedule')
+  }
+}
+
+/**
+ * シフトアサインが既に存在するエラー
+ */
+export class ShiftAssignmentAlreadyExistsError extends AggregateError {
+  constructor() {
+    super('Shift assignment already exists')
+  }
+}
+
+/**
+ * シフトアサインが存在しないエラー
+ */
+export class ShiftAssignmentNotFoundError extends AggregateError {
+  constructor() {
+    super('Shift assignment not found')
   }
 }
 
@@ -55,9 +76,15 @@ export class ShiftSchedule {
     employeeId: EmployeeId,
     shiftTypeId: ShiftTypeId
   ): void {
+    // 過去のシフトスケジュールは編集できない
     if (this.isPast()) {
       throw new CannotEditPastShiftScheduleError()
     }
+    // シフトアサインが既に存在する場合はエラーを投げる
+    if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
+      throw new ShiftAssignmentAlreadyExistsError()
+    }
+
     const shiftAssignment = ShiftAssignment.createWithShiftType(
       this.id,
       shiftAssignmentDate,
@@ -65,6 +92,33 @@ export class ShiftSchedule {
       shiftTypeId
     )
     this.shiftAssignments.push(shiftAssignment)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * 従業員の特定の日付のシフトアサインを解除する
+   * @param shiftAssignmentDate アサイン日
+   * @param employeeId 従業員ID
+   */
+  unassignShift(
+    shiftAssignmentDate: ShiftAssignmentDate,
+    employeeId: EmployeeId
+  ): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+    // シフトアサインが存在しない場合はエラーを投げる
+    if (!this.hasAssignment(shiftAssignmentDate, employeeId)) {
+      throw new ShiftAssignmentNotFoundError()
+    }
+
+    const index = this.shiftAssignments.findIndex(
+      (assignment) =>
+        assignment.date.equals(shiftAssignmentDate) &&
+        assignment.employeeId.equals(employeeId)
+    )
+    this.shiftAssignments.splice(index, 1)
     this._updatedAt = UpdatedAt.now()
   }
 
@@ -86,5 +140,22 @@ export class ShiftSchedule {
       return true
     }
     return false
+  }
+
+  /**
+   * 指定した従業員IDとシフトアサイン日が存在するかどうかを判定する
+   * @param shiftAssignmentDate アサイン日
+   * @param employeeId 従業員ID
+   * @returns 存在する場合はtrue、存在しない場合はfalse
+   */
+  private hasAssignment(
+    shiftAssignmentDate: ShiftAssignmentDate,
+    employeeId: EmployeeId
+  ): boolean {
+    return this.shiftAssignments.some(
+      (assignment) =>
+        assignment.date.equals(shiftAssignmentDate) &&
+        assignment.employeeId.equals(employeeId)
+    )
   }
 }
