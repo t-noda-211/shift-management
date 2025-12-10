@@ -321,6 +321,143 @@ describe('ShiftSchedule', () => {
     })
   })
 
+  describe('grantPublicHoliday', () => {
+    it('正常に公休を付与できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.grantPublicHoliday(date, employeeId)
+
+      expect(schedule.shiftAssignments).toHaveLength(1)
+      expect(schedule.shiftAssignments[0].employeeId).toBe(employeeId)
+      expect(schedule.shiftAssignments[0].date).toBe(date)
+      expect(schedule.shiftAssignments[0].timeOffType).toBeTruthy()
+      expect(schedule.shiftAssignments[0].timeOffType?.isPublicHoliday()).toBe(
+        true
+      )
+    })
+
+    it('付与後にupdatedAtが更新される', async () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const initialUpdatedAt = schedule.updatedAt
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      // 少し待ってから付与（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.grantPublicHoliday(date, employeeId)
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        initialUpdatedAt.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('既に存在するアサインに再度付与しようとするとエラーを投げる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.grantPublicHoliday(date, employeeId)
+
+      expect(() => {
+        schedule.grantPublicHoliday(date, employeeId)
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    it('異なる従業員の同じ日付には付与できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId1 = EmployeeId.create()
+      const employeeId2 = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.grantPublicHoliday(date, employeeId1)
+      schedule.grantPublicHoliday(date, employeeId2)
+
+      expect(schedule.shiftAssignments).toHaveLength(2)
+    })
+
+    it('同じ従業員の異なる日付には付与できる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+      const date2 = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-16`
+      )
+
+      schedule.grantPublicHoliday(date1, employeeId)
+      schedule.grantPublicHoliday(date2, employeeId)
+
+      expect(schedule.shiftAssignments).toHaveLength(2)
+    })
+
+    it('既にシフトがアサインされている日付には公休を付与できない', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const shiftTypeId = ShiftTypeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.assignShift(date, employeeId, shiftTypeId)
+
+      expect(() => {
+        schedule.grantPublicHoliday(date, employeeId)
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    describe('過去のスケジュールの場合', () => {
+      it('過去のスケジュールに付与しようとするとエラーを投げる', () => {
+        // 過去の年月でスケジュールを作成（確実に過去になるように）
+        const pastYearValue = getPastYear()
+        const pastMonthValue = getPastMonth()
+
+        // 過去の年月が生成できない場合はスキップ
+        if (pastYearValue === null || pastMonthValue === null) {
+          // テストをスキップ（過去の年月が生成できない場合）
+          return
+        }
+
+        const pastYear = new ShiftScheduleYear(pastYearValue)
+        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
+        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const employeeId = EmployeeId.create()
+        const date = new ShiftAssignmentDate(
+          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
+        )
+
+        expect(() => {
+          schedule.grantPublicHoliday(date, employeeId)
+        }).toThrow(CannotEditPastShiftScheduleError)
+      })
+    })
+  })
+
   describe('isPublished', () => {
     it('初期状態ではfalseを返す', () => {
       const year = new ShiftScheduleYear(getFutureYear())

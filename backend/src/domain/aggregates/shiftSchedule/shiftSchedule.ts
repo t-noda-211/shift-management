@@ -8,6 +8,7 @@ import { EmployeeId } from '@/domain/value-objects/employeeId'
 import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
 import { CreatedAt } from '@/domain/value-objects/createdAt'
 import { UpdatedAt } from '@/domain/value-objects/updatedAt'
+import { TimeOffType } from '@/domain/value-objects/timeOffType'
 
 /**
  * 過去のシフトスケジュールは編集できないエラー
@@ -119,6 +120,35 @@ export class ShiftSchedule {
         assignment.employeeId.equals(employeeId)
     )
     this.shiftAssignments.splice(index, 1)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * 従業員に公休を付与する
+   * @param shiftAssignmentDate 公休日
+   * @param employeeId 従業員ID
+   */
+  grantPublicHoliday(
+    shiftAssignmentDate: ShiftAssignmentDate,
+    employeeId: EmployeeId
+  ): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+    // シフトアサインが既に存在する場合はエラーを投げる
+    if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
+      throw new ShiftAssignmentAlreadyExistsError()
+    }
+
+    const timeOffType = TimeOffType.publicHoliday()
+    const shiftAssignment = ShiftAssignment.createWithTimeOff(
+      this.id,
+      shiftAssignmentDate,
+      employeeId,
+      timeOffType
+    )
+    this.shiftAssignments.push(shiftAssignment)
     this._updatedAt = UpdatedAt.now()
   }
 
