@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidShiftScheduleYearError extends ValueObjectError {
   constructor() {
@@ -11,7 +12,7 @@ export class InvalidShiftScheduleYearError extends ValueObjectError {
 /**
  * シフトスケジュールの年を表す値オブジェクト
  */
-export class ShiftScheduleYear {
+export class ShiftScheduleYear implements ValueObject {
   readonly value: number
 
   static readonly MIN_YEAR = 2026
@@ -26,5 +27,13 @@ export class ShiftScheduleYear {
       throw new InvalidShiftScheduleYearError()
     }
     this.value = value
+  }
+
+  equals(other: ShiftScheduleYear): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidEmployeeFullNameError extends ValueObjectError {
   constructor() {
@@ -8,7 +9,7 @@ export class InvalidEmployeeFullNameError extends ValueObjectError {
   }
 }
 
-export class EmployeeFullName {
+export class EmployeeFullName implements ValueObject {
   readonly value: string
 
   static readonly MAX_LENGTH = 20
@@ -18,5 +19,13 @@ export class EmployeeFullName {
       throw new InvalidEmployeeFullNameError()
     }
     this.value = value
+  }
+
+  equals(other: EmployeeFullName): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

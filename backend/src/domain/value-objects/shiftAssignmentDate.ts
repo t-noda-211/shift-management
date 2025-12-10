@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidShiftAssignmentDateError extends ValueObjectError {
   constructor(message: string) {
@@ -10,7 +11,7 @@ export class InvalidShiftAssignmentDateError extends ValueObjectError {
  * シフトアサインの日付を表す値オブジェクト
  * "YYYY-MM-DD" 形式の文字列で日付を保持する
  */
-export class ShiftAssignmentDate {
+export class ShiftAssignmentDate implements ValueObject {
   readonly value: string
 
   private static readonly DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
@@ -71,5 +72,13 @@ export class ShiftAssignmentDate {
    */
   getDay(): number {
     return this.toDate().getDate()
+  }
+
+  equals(other: ShiftAssignmentDate): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

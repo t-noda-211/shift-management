@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidShiftTypeTimeError extends ValueObjectError {
   constructor(message: string) {
@@ -10,7 +11,7 @@ export class InvalidShiftTypeTimeError extends ValueObjectError {
  * シフトタイプの時刻を表す値オブジェクト
  * "HH:mm" 形式（24時間制）の文字列で時刻を保持する
  */
-export class ShiftTypeTime {
+export class ShiftTypeTime implements ValueObject {
   readonly value: string
 
   private static readonly TIME_PATTERN = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/
@@ -30,5 +31,13 @@ export class ShiftTypeTime {
   toMinutes(): number {
     const [hours, minutes] = this.value.split(':').map(Number)
     return hours * 60 + minutes
+  }
+
+  equals(other: ShiftTypeTime): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

@@ -1,5 +1,6 @@
 import { ulid, isValid as isValidUlid } from 'ulidx'
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidShiftNoticeIdError extends ValueObjectError {
   constructor() {
@@ -7,7 +8,7 @@ export class InvalidShiftNoticeIdError extends ValueObjectError {
   }
 }
 
-export class ShiftNoticeId {
+export class ShiftNoticeId implements ValueObject {
   private constructor(readonly value: string) {}
 
   static create() {
@@ -19,5 +20,13 @@ export class ShiftNoticeId {
       throw new InvalidShiftNoticeIdError()
     }
     return new ShiftNoticeId(value)
+  }
+
+  equals(other: ShiftNoticeId): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

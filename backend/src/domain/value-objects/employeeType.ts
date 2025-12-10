@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 /**
  * 従業員種別の表示名の型
@@ -20,7 +21,7 @@ export class InvalidEmployeeTypeError extends ValueObjectError {
  * 従業員種別の値オブジェクト
  * 社員または派遣のいずれかを表す
  */
-export class EmployeeType {
+export class EmployeeType implements ValueObject {
   readonly code: EmployeeTypeCode
   readonly name: EmployeeTypeName
 
@@ -78,5 +79,13 @@ export class EmployeeType {
    */
   isDispatched(): boolean {
     return this.code === 'DISPATCHED'
+  }
+
+  equals(other: EmployeeType): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.code === other.code && this.name === other.name
   }
 }

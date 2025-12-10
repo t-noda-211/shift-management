@@ -1,5 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidCreatedAtError extends ValueObjectError {
   constructor(message: string) {
@@ -11,7 +12,7 @@ export class InvalidCreatedAtError extends ValueObjectError {
  * 作成日時を表す値オブジェクト
  * Temporal.Instantで日時を保持する（UTC）
  */
-export class CreatedAt {
+export class CreatedAt implements ValueObject {
   readonly value: Temporal.Instant
 
   constructor(value: string | Temporal.ZonedDateTime | Temporal.Instant) {
@@ -64,5 +65,13 @@ export class CreatedAt {
       )}:${zonedDateTime.minute.toString().padStart(2, '0')}:${zonedDateTime.second
       .toString()
       .padStart(2, '0')}${zonedDateTime.offset}`
+  }
+
+  equals(other: CreatedAt): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return Temporal.Instant.compare(this.value, other.value) === 0
   }
 }

@@ -1,5 +1,6 @@
 // 値オブジェクトのエクスポート
 export { ValueObjectError } from './valueObjectError'
+export type { ValueObject } from './valueObject'
 export { EmployeeId } from './employeeId'
 export { EmployeeFullName } from './employeeFullName'
 export {

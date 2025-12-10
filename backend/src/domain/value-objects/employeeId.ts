@@ -1,5 +1,6 @@
 import { ulid, isValid as isValidUlid } from 'ulidx'
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidEmployeeIdError extends ValueObjectError {
   constructor() {
@@ -7,7 +8,7 @@ export class InvalidEmployeeIdError extends ValueObjectError {
   }
 }
 
-export class EmployeeId {
+export class EmployeeId implements ValueObject {
   private constructor(readonly value: string) {}
 
   static create() {
@@ -19,5 +20,13 @@ export class EmployeeId {
       throw new InvalidEmployeeIdError()
     }
     return new EmployeeId(value)
+  }
+
+  equals(other: EmployeeId): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }

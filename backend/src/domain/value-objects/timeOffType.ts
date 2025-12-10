@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 /**
  * 休暇種別の表示名の型
@@ -20,7 +21,7 @@ export class InvalidTimeOffTypeError extends ValueObjectError {
  * 休暇種別の値オブジェクト
  * 公休または有給のいずれかを表す
  */
-export class TimeOffType {
+export class TimeOffType implements ValueObject {
   readonly code: TimeOffTypeCode
   readonly name: TimeOffTypeName
 
@@ -81,5 +82,13 @@ export class TimeOffType {
    */
   isPaidLeave(): boolean {
     return this.code === 'PAID_LEAVE'
+  }
+
+  equals(other: TimeOffType): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.code === other.code && this.name === other.name
   }
 }

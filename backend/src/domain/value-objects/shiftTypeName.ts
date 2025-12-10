@@ -1,4 +1,5 @@
 import { ValueObjectError } from './valueObjectError'
+import type { ValueObject } from './valueObject'
 
 export class InvalidShiftTypeNameError extends ValueObjectError {
   constructor() {
@@ -8,7 +9,7 @@ export class InvalidShiftTypeNameError extends ValueObjectError {
   }
 }
 
-export class ShiftTypeName {
+export class ShiftTypeName implements ValueObject {
   readonly value: string
 
   static readonly MAX_LENGTH = 10
@@ -18,5 +19,13 @@ export class ShiftTypeName {
       throw new InvalidShiftTypeNameError()
     }
     this.value = value
+  }
+
+  equals(other: ShiftTypeName): boolean {
+    if (this === other) {
+      return true
+    }
+
+    return this.value === other.value
   }
 }
