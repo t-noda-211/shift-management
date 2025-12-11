@@ -15,6 +15,14 @@ export { ShiftAssignmentId } from './shiftAssignmentId'
 export { ShiftAssignmentDate } from './shiftAssignmentDate'
 export { ShiftNoticeId } from './shiftNoticeId'
 export {
+  ShiftNoticeTitle,
+  InvalidShiftNoticeTitleError,
+} from './shiftNoticeTitle'
+export {
+  ShiftNoticeContent,
+  InvalidShiftNoticeContentError,
+} from './shiftNoticeContent'
+export {
   TimeOffType,
   type TimeOffTypeName,
   type TimeOffTypeCode,
