@@ -19,19 +19,31 @@ export class EndTimeMustBeAfterStartTimeError extends AggregateError {
 export class ShiftType {
   private constructor(
     public readonly id: ShiftTypeId,
-    public readonly name: ShiftTypeName,
-    public readonly startTime: ShiftTypeTime,
-    public readonly endTime: ShiftTypeTime
+    private _name: ShiftTypeName,
+    private _startTime: ShiftTypeTime,
+    private _endTime: ShiftTypeTime
   ) {}
 
+  get name(): string {
+    return this._name.value
+  }
+
+  get startTime(): ShiftTypeTime {
+    return this._startTime
+  }
+
+  get endTime(): ShiftTypeTime {
+    return this._endTime
+  }
+
   static create(
-    name: ShiftTypeName,
+    name: string,
     startTime: ShiftTypeTime,
     endTime: ShiftTypeTime
   ): ShiftType {
     ShiftType.validateEndTimeMustBeAfterStartTime(startTime, endTime)
     const id = ShiftTypeId.create()
-    return new ShiftType(id, name, startTime, endTime)
+    return new ShiftType(id, new ShiftTypeName(name), startTime, endTime)
   }
 
   private static validateEndTimeMustBeAfterStartTime(
@@ -51,5 +63,24 @@ export class ShiftType {
     const hours = minutesDiff / 60
     // 小数第1位まで切り上げ
     return Math.ceil(hours * 10) / 10
+  }
+
+  static from(
+    id: ShiftTypeId,
+    name: ShiftTypeName,
+    startTime: ShiftTypeTime,
+    endTime: ShiftTypeTime
+  ): ShiftType {
+    return new ShiftType(id, name, startTime, endTime)
+  }
+
+  updateName(name: string): void {
+    this._name = new ShiftTypeName(name)
+  }
+
+  updateTime(startTime: ShiftTypeTime, endTime: ShiftTypeTime): void {
+    ShiftType.validateEndTimeMustBeAfterStartTime(startTime, endTime)
+    this._startTime = startTime
+    this._endTime = endTime
   }
 }
