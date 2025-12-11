@@ -9,6 +9,7 @@ import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
 import { CreatedAt } from '@/domain/value-objects/createdAt'
 import { UpdatedAt } from '@/domain/value-objects/updatedAt'
 import { TimeOffType } from '@/domain/value-objects/timeOffType'
+import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
 
 /**
  * 過去のシフトスケジュールは編集できないエラー
@@ -91,6 +92,35 @@ export class ShiftSchedule {
       shiftAssignmentDate,
       employeeId,
       shiftTypeId
+    )
+    this.shiftAssignments.push(shiftAssignment)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * カスタム勤務時間のシフトでアサインする
+   */
+  assignShiftWithCustomTime(
+    shiftAssignmentDate: ShiftAssignmentDate,
+    employeeId: EmployeeId,
+    customStartTime: ShiftTypeTime,
+    customEndTime: ShiftTypeTime
+  ): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+    // シフトアサインが既に存在する場合はエラーを投げる
+    if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
+      throw new ShiftAssignmentAlreadyExistsError()
+    }
+
+    const shiftAssignment = ShiftAssignment.createWithCustomTime(
+      this.id,
+      shiftAssignmentDate,
+      employeeId,
+      customStartTime,
+      customEndTime
     )
     this.shiftAssignments.push(shiftAssignment)
     this._updatedAt = UpdatedAt.now()

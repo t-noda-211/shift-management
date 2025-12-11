@@ -9,6 +9,7 @@ import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
 import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
 import { EmployeeId } from '@/domain/value-objects/employeeId'
 import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
+import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
 import { Temporal } from '@js-temporal/polyfill'
 
 describe('ShiftSchedule', () => {
@@ -171,6 +172,47 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftAssignments).toHaveLength(2)
     })
 
+    it('既に公休がアサインされている場合、再度シフトをアサインしようとするとエラーを投げる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const shiftTypeId = ShiftTypeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.grantPublicHoliday(date, employeeId)
+
+      expect(() => {
+        schedule.assignShift(date, employeeId, shiftTypeId)
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    it('既にカスタム時間のシフトがアサインされている場合、再度アサインしようとするとエラーを投げる', () => {
+      const year = new ShiftScheduleYear(getFutureYear())
+      const month = new ShiftScheduleMonth(getFutureMonth())
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const shiftTypeId = ShiftTypeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
+
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      expect(() => {
+        schedule.assignShift(date, employeeId, shiftTypeId)
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールにアサインしようとするとエラーを投げる', () => {
         // 過去の年月でスケジュールを作成（確実に過去になるように）
@@ -194,6 +236,206 @@ describe('ShiftSchedule', () => {
 
         expect(() => {
           schedule.assignShift(date, employeeId, shiftTypeId)
+        }).toThrow(CannotEditPastShiftScheduleError)
+      })
+    })
+  })
+
+  describe('assignShiftWithCustomTime', () => {
+    // 不変な値は describe で共有
+    const year = new ShiftScheduleYear(getFutureYear())
+    const month = new ShiftScheduleMonth(getFutureMonth())
+    const customStartTime = new ShiftTypeTime('09:00')
+    const customEndTime = new ShiftTypeTime('17:00')
+
+    it('正常にカスタム時間のシフトをアサインできる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      expect(schedule.shiftAssignments).toHaveLength(1)
+      expect(schedule.shiftAssignments[0].employeeId).toBe(employeeId)
+      expect(schedule.shiftAssignments[0].date).toBe(date)
+      expect(schedule.shiftAssignments[0].customStartTime).toBe(customStartTime)
+      expect(schedule.shiftAssignments[0].customEndTime).toBe(customEndTime)
+      expect(schedule.shiftAssignments[0].shiftTypeId).toBeNull()
+      expect(schedule.shiftAssignments[0].timeOffType).toBeNull()
+    })
+
+    it('アサイン後にupdatedAtが更新される', async () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const initialUpdatedAt = schedule.updatedAt
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      // 少し待ってからアサイン（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        initialUpdatedAt.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('既に存在するアサインに再度アサインしようとするとエラーを投げる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      expect(() => {
+        schedule.assignShiftWithCustomTime(
+          date,
+          employeeId,
+          customStartTime,
+          customEndTime
+        )
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    it('異なる従業員の同じ日付にはアサインできる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId1 = EmployeeId.create()
+      const employeeId2 = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId1,
+        customStartTime,
+        customEndTime
+      )
+      schedule.assignShiftWithCustomTime(
+        date,
+        employeeId2,
+        customStartTime,
+        customEndTime
+      )
+
+      expect(schedule.shiftAssignments).toHaveLength(2)
+    })
+
+    it('同じ従業員の異なる日付にはアサインできる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+      const date2 = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-16`
+      )
+
+      schedule.assignShiftWithCustomTime(
+        date1,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+      schedule.assignShiftWithCustomTime(
+        date2,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      expect(schedule.shiftAssignments).toHaveLength(2)
+    })
+
+    it('既にシフトがアサインされている日付にはカスタム時間でアサインできない', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const shiftTypeId = ShiftTypeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.assignShift(date, employeeId, shiftTypeId)
+
+      expect(() => {
+        schedule.assignShiftWithCustomTime(
+          date,
+          employeeId,
+          customStartTime,
+          customEndTime
+        )
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    it('既に公休がアサインされている場合、カスタム時間のシフトをアサインしようとするとエラーを投げる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const employeeId = EmployeeId.create()
+      const date = new ShiftAssignmentDate(
+        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-15`
+      )
+
+      schedule.grantPublicHoliday(date, employeeId)
+
+      expect(() => {
+        schedule.assignShiftWithCustomTime(
+          date,
+          employeeId,
+          customStartTime,
+          customEndTime
+        )
+      }).toThrow(ShiftAssignmentAlreadyExistsError)
+    })
+
+    describe('過去のスケジュールの場合', () => {
+      it('過去のスケジュールにアサインしようとするとエラーを投げる', () => {
+        // 過去の年月でスケジュールを作成（確実に過去になるように）
+        const pastYearValue = getPastYear()
+        const pastMonthValue = getPastMonth()
+
+        // 過去の年月が生成できない場合はスキップ
+        if (pastYearValue === null || pastMonthValue === null) {
+          // テストをスキップ（過去の年月が生成できない場合）
+          return
+        }
+
+        const pastYear = new ShiftScheduleYear(pastYearValue)
+        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
+        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const employeeId = EmployeeId.create()
+        const date = new ShiftAssignmentDate(
+          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
+        )
+
+        expect(() => {
+          schedule.assignShiftWithCustomTime(
+            date,
+            employeeId,
+            customStartTime,
+            customEndTime
+          )
         }).toThrow(CannotEditPastShiftScheduleError)
       })
     })
