@@ -9,12 +9,36 @@ import { EmployeeType } from '@/domain/value-objects/employeeType'
 export class Employee {
   private constructor(
     public readonly id: EmployeeId,
-    public readonly fullName: EmployeeFullName,
-    public readonly type: EmployeeType
+    private _fullName: EmployeeFullName,
+    private _type: EmployeeType
   ) {}
 
-  static create(fullName: EmployeeFullName, type: EmployeeType): Employee {
+  get fullName(): string {
+    return this._fullName.value
+  }
+
+  get type(): EmployeeType {
+    return this._type
+  }
+
+  static create(fullName: string, type: EmployeeType): Employee {
     const id = EmployeeId.create()
+    return new Employee(id, new EmployeeFullName(fullName), type)
+  }
+
+  static from(
+    id: EmployeeId,
+    fullName: EmployeeFullName,
+    type: EmployeeType
+  ): Employee {
     return new Employee(id, fullName, type)
+  }
+
+  updateFullName(fullName: string): void {
+    this._fullName = new EmployeeFullName(fullName)
+  }
+
+  updateType(type: EmployeeType): void {
+    this._type = type
   }
 }
