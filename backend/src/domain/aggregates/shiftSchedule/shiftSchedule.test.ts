@@ -3,6 +3,7 @@ import {
   CannotEditPastShiftScheduleError,
   ShiftAssignmentAlreadyExistsError,
   ShiftAssignmentNotFoundError,
+  ShiftNoticeNotFoundError,
 } from './shiftSchedule'
 import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
 import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
@@ -10,6 +11,7 @@ import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
 import { EmployeeId } from '@/domain/value-objects/employeeId'
 import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
 import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
 import { Temporal } from '@js-temporal/polyfill'
 
 describe('ShiftSchedule', () => {
@@ -776,6 +778,225 @@ describe('ShiftSchedule', () => {
 
       expect(schedule.updatedAt).toBeTruthy()
       expect(schedule.updatedAt.value).toBeInstanceOf(Temporal.Instant)
+    })
+  })
+
+  describe('createNotice', () => {
+    // 不変な値は describe で共有
+    const year = new ShiftScheduleYear(getFutureYear())
+    const month = new ShiftScheduleMonth(getFutureMonth())
+
+    it('正常にお知らせを作成できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const title = '来月のシフトについて'
+      const content = '来月のシフト希望は25日までに提出してください。'
+
+      schedule.createNotice(title, content)
+
+      expect(schedule.shiftNotices).toHaveLength(1)
+      expect(schedule.shiftNotices[0].title).toBe(title)
+      expect(schedule.shiftNotices[0].content).toBe(content)
+      expect(schedule.shiftNotices[0].shiftScheduleId).toBe(schedule.id)
+    })
+
+    it('作成後にupdatedAtが更新される', async () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const initialUpdatedAt = schedule.updatedAt
+
+      // 少し待ってから作成（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.createNotice('タイトル', '内容')
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        initialUpdatedAt.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('複数のお知らせを作成できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+
+      schedule.createNotice('タイトル1', '内容1')
+      schedule.createNotice('タイトル2', '内容2')
+      schedule.createNotice('タイトル3', '内容3')
+
+      expect(schedule.shiftNotices).toHaveLength(3)
+      expect(schedule.shiftNotices[0].title).toBe('タイトル1')
+      expect(schedule.shiftNotices[1].title).toBe('タイトル2')
+      expect(schedule.shiftNotices[2].title).toBe('タイトル3')
+    })
+
+    describe('過去のスケジュールの場合', () => {
+      it('過去のスケジュールにお知らせを作成しようとするとエラーを投げる', () => {
+        // 過去の年月でスケジュールを作成（確実に過去になるように）
+        const pastYearValue = getPastYear()
+        const pastMonthValue = getPastMonth()
+
+        // 過去の年月が生成できない場合はスキップ
+        if (pastYearValue === null || pastMonthValue === null) {
+          // テストをスキップ（過去の年月が生成できない場合）
+          return
+        }
+
+        const pastYear = new ShiftScheduleYear(pastYearValue)
+        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
+        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+
+        expect(() => {
+          schedule.createNotice('タイトル', '内容')
+        }).toThrow(CannotEditPastShiftScheduleError)
+      })
+    })
+  })
+
+  describe('updateNotice', () => {
+    // 不変な値は describe で共有
+    const year = new ShiftScheduleYear(getFutureYear())
+    const month = new ShiftScheduleMonth(getFutureMonth())
+
+    it('正常にお知らせのタイトルと内容を更新できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('元のタイトル', '元の内容')
+      const noticeId = schedule.shiftNotices[0].id
+
+      schedule.updateNotice(noticeId, '新しいタイトル', '新しい内容')
+
+      expect(schedule.shiftNotices[0].title).toBe('新しいタイトル')
+      expect(schedule.shiftNotices[0].content).toBe('新しい内容')
+    })
+
+    it('タイトルのみを更新できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('元のタイトル', '元の内容')
+      const noticeId = schedule.shiftNotices[0].id
+      const originalContent = schedule.shiftNotices[0].content
+
+      schedule.updateNotice(noticeId, '新しいタイトル')
+
+      expect(schedule.shiftNotices[0].title).toBe('新しいタイトル')
+      expect(schedule.shiftNotices[0].content).toBe(originalContent)
+    })
+
+    it('内容のみを更新できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('元のタイトル', '元の内容')
+      const noticeId = schedule.shiftNotices[0].id
+      const originalTitle = schedule.shiftNotices[0].title
+
+      schedule.updateNotice(noticeId, undefined, '新しい内容')
+
+      expect(schedule.shiftNotices[0].title).toBe(originalTitle)
+      expect(schedule.shiftNotices[0].content).toBe('新しい内容')
+    })
+
+    it('更新後にupdatedAtが更新される', async () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('タイトル', '内容')
+      const noticeId = schedule.shiftNotices[0].id
+      const updatedAtAfterCreate = schedule.updatedAt
+
+      // 少し待ってから更新（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.updateNotice(noticeId, '新しいタイトル', '新しい内容')
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        updatedAtAfterCreate.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('存在しないお知らせを更新しようとするとエラーを投げる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const nonExistentId = ShiftNoticeId.create()
+
+      expect(() => {
+        schedule.updateNotice(nonExistentId, 'タイトル', '内容')
+      }).toThrow(ShiftNoticeNotFoundError)
+    })
+
+    it('複数のお知らせがある場合、指定したIDのお知らせのみが更新される', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('タイトル1', '内容1')
+      schedule.createNotice('タイトル2', '内容2')
+      const noticeId1 = schedule.shiftNotices[0].id
+
+      schedule.updateNotice(noticeId1, '更新されたタイトル1', '更新された内容1')
+
+      expect(schedule.shiftNotices[0].title).toBe('更新されたタイトル1')
+      expect(schedule.shiftNotices[0].content).toBe('更新された内容1')
+      expect(schedule.shiftNotices[1].title).toBe('タイトル2')
+      expect(schedule.shiftNotices[1].content).toBe('内容2')
+    })
+  })
+
+  describe('deleteNotice', () => {
+    // 不変な値は describe で共有
+    const year = new ShiftScheduleYear(getFutureYear())
+    const month = new ShiftScheduleMonth(getFutureMonth())
+
+    it('正常にお知らせを削除できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('タイトル1', '内容1')
+      schedule.createNotice('タイトル2', '内容2')
+      const noticeId1 = schedule.shiftNotices[0].id
+
+      expect(schedule.shiftNotices).toHaveLength(2)
+
+      schedule.deleteNotice(noticeId1)
+
+      expect(schedule.shiftNotices).toHaveLength(1)
+      expect(schedule.shiftNotices[0].title).toBe('タイトル2')
+    })
+
+    it('削除後にupdatedAtが更新される', async () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('タイトル', '内容')
+      const noticeId = schedule.shiftNotices[0].id
+      const updatedAtAfterCreate = schedule.updatedAt
+
+      // 少し待ってから削除（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.deleteNotice(noticeId)
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        updatedAtAfterCreate.value
+      )
+      expect(comparison).toBeGreaterThan(0)
+    })
+
+    it('存在しないお知らせを削除しようとするとエラーを投げる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      const nonExistentId = ShiftNoticeId.create()
+
+      expect(() => {
+        schedule.deleteNotice(nonExistentId)
+      }).toThrow(ShiftNoticeNotFoundError)
+    })
+
+    it('全てのお知らせを削除できる', () => {
+      const schedule = ShiftSchedule.create(year, month)
+      schedule.createNotice('タイトル1', '内容1')
+      schedule.createNotice('タイトル2', '内容2')
+      schedule.createNotice('タイトル3', '内容3')
+
+      const noticeId1 = schedule.shiftNotices[0].id
+      const noticeId2 = schedule.shiftNotices[1].id
+      const noticeId3 = schedule.shiftNotices[2].id
+
+      schedule.deleteNotice(noticeId2)
+      expect(schedule.shiftNotices).toHaveLength(2)
+
+      schedule.deleteNotice(noticeId1)
+      expect(schedule.shiftNotices).toHaveLength(1)
+
+      schedule.deleteNotice(noticeId3)
+      expect(schedule.shiftNotices).toHaveLength(0)
     })
   })
 })

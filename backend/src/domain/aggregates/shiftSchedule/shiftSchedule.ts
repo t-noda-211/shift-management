@@ -10,6 +10,7 @@ import { CreatedAt } from '@/domain/value-objects/createdAt'
 import { UpdatedAt } from '@/domain/value-objects/updatedAt'
 import { TimeOffType } from '@/domain/value-objects/timeOffType'
 import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
 
 /**
  * 過去のシフトスケジュールは編集できないエラー
@@ -35,6 +36,15 @@ export class ShiftAssignmentAlreadyExistsError extends AggregateError {
 export class ShiftAssignmentNotFoundError extends AggregateError {
   constructor() {
     super('Shift assignment not found')
+  }
+}
+
+/**
+ * お知らせが存在しないエラー
+ */
+export class ShiftNoticeNotFoundError extends AggregateError {
+  constructor() {
+    super('Shift notice not found')
   }
 }
 
@@ -239,5 +249,65 @@ export class ShiftSchedule {
         assignment.date.equals(shiftAssignmentDate) &&
         assignment.employeeId.equals(employeeId)
     )
+  }
+
+  // ================================================
+  // お知らせ
+  // ================================================
+  /**
+   * お知らせ（ShiftNotice）を作成して追加する
+   * @param title お知らせタイトル
+   * @param content お知らせ本文
+   */
+  createNotice(title: string, content: string): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+
+    const notice = ShiftNotice.create(this.id, title, content)
+    this.shiftNotices.push(notice)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * お知らせ（ShiftNotice）を更新する
+   * @param id お知らせID
+   * @param title お知らせタイトル
+   * @param content お知らせ本文
+   */
+  updateNotice(id: ShiftNoticeId, title?: string, content?: string): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+
+    const notice = this.shiftNotices.find((notice) => notice.id.equals(id))
+    if (!notice) {
+      throw new ShiftNoticeNotFoundError()
+    }
+
+    if (title) notice.updateTitle(title)
+    if (content) notice.updateContent(content)
+    this._updatedAt = UpdatedAt.now()
+  }
+
+  /**
+   * お知らせ（ShiftNotice）を削除する
+   * @param id お知らせID
+   */
+  deleteNotice(id: ShiftNoticeId): void {
+    // 過去のシフトスケジュールは編集できない
+    if (this.isPast()) {
+      throw new CannotEditPastShiftScheduleError()
+    }
+
+    const index = this.shiftNotices.findIndex((notice) => notice.id.equals(id))
+    if (index === -1) {
+      throw new ShiftNoticeNotFoundError()
+    }
+
+    this.shiftNotices.splice(index, 1)
+    this._updatedAt = UpdatedAt.now()
   }
 }
