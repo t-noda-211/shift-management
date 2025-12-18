@@ -17,6 +17,9 @@ erDiagram
     ShiftAssignment
     ShiftNotice
 
+    %% ShiftScheduleHistory集約
+    ShiftScheduleHistory
+
     ShiftType ||--o{ ShiftSchedule : ""
     ShiftSchedule ||--o{ ShiftAssignment: ""
     Employee ||--o{ ShiftAssignment: ""
@@ -60,3 +63,9 @@ erDiagram
 シフト連絡
 
 従業員への事務連絡を表すエンティティ。
+
+### ShiftScheduleHistory
+
+シフトスケジュール履歴（集約ルート）
+
+過去のシフトを表すエンティティ。
