@@ -15,7 +15,7 @@ export class InvalidShiftScheduleYearError extends ValueObjectError {
 export class ShiftScheduleYear implements ValueObject {
   readonly value: number
 
-  static readonly MIN_YEAR = 2026
+  static readonly MIN_YEAR = 2000
   static readonly MAX_YEAR = 2100
 
   constructor(value: number) {

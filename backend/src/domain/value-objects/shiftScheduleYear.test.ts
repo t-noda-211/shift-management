@@ -11,10 +11,10 @@ describe('ShiftScheduleYear', () => {
       expect(year.value).toBe(2026)
     })
 
-    it('最小年（2026）を作成できる', () => {
-      const year = new ShiftScheduleYear(2026)
+    it('最小年（2000）を作成できる', () => {
+      const year = new ShiftScheduleYear(2000)
 
-      expect(year.value).toBe(2026)
+      expect(year.value).toBe(2000)
     })
 
     it('最大年（2100）を作成できる', () => {
@@ -25,7 +25,7 @@ describe('ShiftScheduleYear', () => {
 
     it('最小年未満の場合、エラーを投げる', () => {
       expect(() => {
-        new ShiftScheduleYear(2025)
+        new ShiftScheduleYear(1999)
       }).toThrow(InvalidShiftScheduleYearError)
     })
 
