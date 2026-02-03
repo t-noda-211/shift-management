@@ -11,6 +11,16 @@ import { UpdatedAt } from '@/domain/value-objects/updatedAt'
 import { TimeOffType } from '@/domain/value-objects/timeOffType'
 import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
 import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
+import { Temporal } from '@js-temporal/polyfill'
+
+/**
+ * 過去のシフトスケジュールは作成できないエラー
+ */
+export class CannotCreatePastShiftScheduleError extends AggregateError {
+  constructor() {
+    super('Cannot create shift schedule in the past')
+  }
+}
 
 /**
  * 過去のシフトスケジュールは編集できないエラー
@@ -76,6 +86,23 @@ export class ShiftSchedule {
     year: ShiftScheduleYear,
     month: ShiftScheduleMonth
   ): ShiftSchedule {
+    // 年月が先月以前の場合は作成できない
+    // JST（Asia/Tokyo）で現在の日付を取得
+    const now = Temporal.Now.zonedDateTimeISO('Asia/Tokyo').toPlainDate()
+    const thisYear = now.year
+    const thisMonth = now.month
+
+    let canCreate = false
+    if (year.value > thisYear) {
+      canCreate = true
+    } else if (year.value === thisYear && month.value >= thisMonth) {
+      canCreate = true
+    }
+
+    if (!canCreate) {
+      throw new CannotCreatePastShiftScheduleError()
+    }
+
     const id = ShiftScheduleId.create()
     return new ShiftSchedule(id, year, month)
   }
@@ -215,13 +242,14 @@ export class ShiftSchedule {
   }
 
   /**
-   * このシフトスケジュールが過去（今日より前）の年月かどうかを判定する
+   * このシフトスケジュールが過去（今月より前）の年月かどうかを判定する
    * @returns trueなら過去
    */
   private isPast(): boolean {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() + 1
+    // JST（Asia/Tokyo）で現在の日付を取得
+    const now = Temporal.Now.zonedDateTimeISO('Asia/Tokyo').toPlainDate()
+    const currentYear = now.year
+    const currentMonth = now.month
     const scheduleYear = this.year.value
     const scheduleMonth = this.month.value
 
@@ -289,7 +317,9 @@ export class ShiftSchedule {
 
     if (title) notice.updateTitle(title)
     if (content) notice.updateContent(content)
-    this._updatedAt = UpdatedAt.now()
+    if (title || content) {
+      this._updatedAt = UpdatedAt.now()
+    }
   }
 
   /**

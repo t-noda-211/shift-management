@@ -1,5 +1,6 @@
 import { ShiftSchedule } from './shiftSchedule'
 import {
+  CannotCreatePastShiftScheduleError,
   CannotEditPastShiftScheduleError,
   ShiftAssignmentAlreadyExistsError,
   ShiftAssignmentNotFoundError,
@@ -14,59 +15,87 @@ import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
 import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
 import { Temporal } from '@js-temporal/polyfill'
 
+// 固定の日時を使用するためのモック
+let mockNowZDT: ReturnType<typeof Temporal.ZonedDateTime.from> =
+  Temporal.ZonedDateTime.from('2026-06-15T12:00:00+09:00[Asia/Tokyo]')
+jest.mock('@js-temporal/polyfill', () => {
+  const actual = jest.requireActual<typeof import('@js-temporal/polyfill')>(
+    '@js-temporal/polyfill'
+  )
+  return {
+    ...actual,
+    Temporal: {
+      ...actual.Temporal,
+      Now: {
+        ...actual.Temporal.Now,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        zonedDateTimeISO: (timeZone: string) => mockNowZDT,
+        instant: () => mockNowZDT.toInstant(),
+      },
+    },
+  }
+})
+const makeFuture = () => {
+  mockNowZDT = Temporal.ZonedDateTime.from(
+    '2027-06-15T12:00:00+09:00[Asia/Tokyo]'
+  )
+}
+
+// updatedAtをモックする
+let updateInstant: Temporal.Instant = mockNowZDT.toInstant()
+jest.mock('@/domain/value-objects/updatedAt', () => {
+  const actual = jest.requireActual<
+    typeof import('@/domain/value-objects/updatedAt')
+  >('@/domain/value-objects/updatedAt')
+  return {
+    ...actual,
+    UpdatedAt: {
+      ...actual.UpdatedAt,
+      now: () => new actual.UpdatedAt(updateInstant),
+    },
+  }
+})
+const mockUpdatedAt = () => {
+  updateInstant = Temporal.ZonedDateTime.from(
+    '2026-06-15T20:00:00+09:00[Asia/Tokyo]'
+  ).toInstant()
+}
+
+const validYear = new ShiftScheduleYear(2026)
+const validMonth = new ShiftScheduleMonth(7)
+
+afterEach(() => {
+  mockNowZDT = Temporal.ZonedDateTime.from(
+    '2026-06-15T12:00:00+09:00[Asia/Tokyo]'
+  )
+  updateInstant = mockNowZDT.toInstant()
+})
+
 describe('ShiftSchedule', () => {
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth() + 1
+  describe('isPublished', () => {
+    it('初期状態ではfalseを返す', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
-  // テスト用の未来の年月を生成（現在の年月より後）
-  const getFutureYear = (): number => {
-    return Math.max(2026, currentYear + 1)
-  }
+      expect(schedule.isPublished).toBe(false)
+    })
+  })
 
-  const getFutureMonth = (): number => {
-    if (currentYear < getFutureYear()) {
-      return 1
-    }
-    return currentMonth < 12 ? currentMonth + 1 : 1
-  }
+  describe('updatedAt', () => {
+    it('更新日時を取得できる', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
-  // テスト用の過去の年月を生成（現在の年月より前）
-  // 確実に過去になるように、現在の年月より前の年月を使用
-  const getPastYear = (): number | null => {
-    // 現在の年が2026より大きい場合は、現在の年-1を使用
-    if (currentYear > 2026) {
-      return currentYear - 1
-    }
-    // 現在の年が2026の場合、月が1より大きい場合は2026年を使用
-    if (currentYear === 2026 && currentMonth > 1) {
-      return 2026
-    }
-    // 過去の年月が生成できない場合はnullを返す
-    return null
-  }
-
-  const getPastMonth = (): number | null => {
-    const pastYear = getPastYear()
-    if (pastYear === null) {
-      return null
-    }
-    if (currentYear > pastYear) {
-      // 過去の年なので、任意の月（12月）を使用
-      return 12
-    }
-    // 同じ年の場合、現在の月より前の月を使用
-    return currentMonth > 1 ? currentMonth - 1 : null
-  }
+      expect(schedule.updatedAt).toBeTruthy()
+      expect(schedule.updatedAt.value).toBeInstanceOf(Temporal.Instant)
+    })
+  })
 
   describe('create', () => {
     it('新しいShiftScheduleを作成できる', () => {
-      const year = new ShiftScheduleYear(getFutureYear())
-      const month = new ShiftScheduleMonth(getFutureMonth())
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       expect(schedule.id).toBeTruthy()
-      expect(schedule.year).toBe(year)
-      expect(schedule.month).toBe(month)
+      expect(schedule.year).toBe(validYear)
+      expect(schedule.month).toBe(validMonth)
       expect(schedule.isPublished).toBe(false)
       expect(schedule.shiftAssignments).toEqual([])
       expect(schedule.shiftNotices).toEqual([])
@@ -75,32 +104,49 @@ describe('ShiftSchedule', () => {
     })
 
     it('毎回異なるIDが生成される', () => {
-      const year = new ShiftScheduleYear(getFutureYear())
-      const month = new ShiftScheduleMonth(getFutureMonth())
-      const schedule1 = ShiftSchedule.create(year, month)
-      const schedule2 = ShiftSchedule.create(year, month)
+      const schedule1 = ShiftSchedule.create(validYear, validMonth)
+      const schedule2 = ShiftSchedule.create(validYear, validMonth)
 
       expect(schedule1.id.value).not.toBe(schedule2.id.value)
+    })
+
+    it('現在の年月でcreateすると成功する', () => {
+      const year = new ShiftScheduleYear(2026)
+      const month = new ShiftScheduleMonth(6)
+
+      const schedule = ShiftSchedule.create(year, month)
+
+      expect(schedule.id).toBeTruthy()
+      expect(schedule.year).toBe(year)
+      expect(schedule.month).toBe(month)
+    })
+
+    it('過去の年月でcreateするとCannotCreatePastShiftScheduleErrorを投げる', () => {
+      const year = new ShiftScheduleYear(2020)
+      const month = new ShiftScheduleMonth(1)
+
+      expect(() => {
+        ShiftSchedule.create(year, month)
+      }).toThrow(CannotCreatePastShiftScheduleError)
+    })
+
+    it('先月の年月でcreateするとCannotCreatePastShiftScheduleErrorを投げる', () => {
+      const year = new ShiftScheduleYear(2026)
+      const month = new ShiftScheduleMonth(5)
+
+      expect(() => {
+        ShiftSchedule.create(year, month)
+      }).toThrow(CannotCreatePastShiftScheduleError)
     })
   })
 
   describe('assignShift', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
     const shiftTypeId = ShiftTypeId.create()
 
-    // 日付生成のヘルパー関数
-    const createDate = (day: number): ShiftAssignmentDate => {
-      return new ShiftAssignmentDate(
-        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      )
-    }
-
     it('正常にシフトをアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
@@ -110,17 +156,16 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftAssignments[0].shiftTypeId).toBe(shiftTypeId)
     })
 
-    it('アサイン後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('アサイン後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
-      // 少し待ってからアサイン（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.assignShift(date, employeeId, shiftTypeId)
 
-      // Temporal.Instantの比較を使用
       const comparison = Temporal.Instant.compare(
         schedule.updatedAt.value,
         initialUpdatedAt.value
@@ -129,9 +174,9 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に存在するアサインに再度アサインしようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
@@ -141,10 +186,10 @@ describe('ShiftSchedule', () => {
     })
 
     it('異なる従業員の同じ日付にはアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId1 = EmployeeId.create()
       const employeeId2 = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.assignShift(date, employeeId1, shiftTypeId)
       schedule.assignShift(date, employeeId2, shiftTypeId)
@@ -153,10 +198,10 @@ describe('ShiftSchedule', () => {
     })
 
     it('同じ従業員の異なる日付にはアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date1 = createDate(15)
-      const date2 = createDate(16)
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
 
       schedule.assignShift(date1, employeeId, shiftTypeId)
       schedule.assignShift(date2, employeeId, shiftTypeId)
@@ -165,9 +210,9 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に公休がアサインされている場合、再度シフトをアサインしようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.grantPublicHoliday(date, employeeId)
 
@@ -177,9 +222,9 @@ describe('ShiftSchedule', () => {
     })
 
     it('既にカスタム時間のシフトがアサインされている場合、再度アサインしようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
       const customStartTime = new ShiftTypeTime('09:00')
       const customEndTime = new ShiftTypeTime('17:00')
 
@@ -197,24 +242,12 @@ describe('ShiftSchedule', () => {
 
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールにアサインしようとするとエラーを投げる', () => {
-        // 過去の年月でスケジュールを作成（確実に過去になるように）
-        const pastYearValue = getPastYear()
-        const pastMonthValue = getPastMonth()
-
-        // 過去の年月が生成できない場合はスキップ
-        if (pastYearValue === null || pastMonthValue === null) {
-          // テストをスキップ（過去の年月が生成できない場合）
-          return
-        }
-
-        const pastYear = new ShiftScheduleYear(pastYearValue)
-        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
-        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        // 年月を進める
+        makeFuture()
         const employeeId = EmployeeId.create()
         const shiftTypeId = ShiftTypeId.create()
-        const date = new ShiftAssignmentDate(
-          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
-        )
+        const date = new ShiftAssignmentDate('2026-06-15')
 
         expect(() => {
           schedule.assignShift(date, employeeId, shiftTypeId)
@@ -224,23 +257,12 @@ describe('ShiftSchedule', () => {
   })
 
   describe('assignShiftWithCustomTime', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-    const customStartTime = new ShiftTypeTime('09:00')
-    const customEndTime = new ShiftTypeTime('17:00')
-
-    // 日付生成のヘルパー関数
-    const createDate = (day: number): ShiftAssignmentDate => {
-      return new ShiftAssignmentDate(
-        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      )
-    }
-
     it('正常にカスタム時間のシフトをアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.assignShiftWithCustomTime(
         date,
@@ -258,14 +280,16 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftAssignments[0].timeOffType).toBeNull()
     })
 
-    it('アサイン後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('アサイン後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
-      // 少し待ってからアサイン（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.assignShiftWithCustomTime(
         date,
         employeeId,
@@ -282,9 +306,11 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に存在するアサインに再度アサインしようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.assignShiftWithCustomTime(
         date,
@@ -304,10 +330,12 @@ describe('ShiftSchedule', () => {
     })
 
     it('異なる従業員の同じ日付にはアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId1 = EmployeeId.create()
       const employeeId2 = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.assignShiftWithCustomTime(
         date,
@@ -326,10 +354,12 @@ describe('ShiftSchedule', () => {
     })
 
     it('同じ従業員の異なる日付にはアサインできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date1 = createDate(15)
-      const date2 = createDate(16)
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.assignShiftWithCustomTime(
         date1,
@@ -348,10 +378,12 @@ describe('ShiftSchedule', () => {
     })
 
     it('既にシフトがアサインされている日付にはカスタム時間でアサインできない', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
       const shiftTypeId = ShiftTypeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
@@ -366,9 +398,11 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に公休がアサインされている場合、カスタム時間のシフトをアサインしようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
 
       schedule.grantPublicHoliday(date, employeeId)
 
@@ -384,23 +418,13 @@ describe('ShiftSchedule', () => {
 
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールにアサインしようとするとエラーを投げる', () => {
-        // 過去の年月でスケジュールを作成（確実に過去になるように）
-        const pastYearValue = getPastYear()
-        const pastMonthValue = getPastMonth()
-
-        // 過去の年月が生成できない場合はスキップ
-        if (pastYearValue === null || pastMonthValue === null) {
-          // テストをスキップ（過去の年月が生成できない場合）
-          return
-        }
-
-        const pastYear = new ShiftScheduleYear(pastYearValue)
-        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
-        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        // 年月を進める
+        makeFuture()
         const employeeId = EmployeeId.create()
-        const date = new ShiftAssignmentDate(
-          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
-        )
+        const date = new ShiftAssignmentDate('2026-06-15')
+        const customStartTime = new ShiftTypeTime('09:00')
+        const customEndTime = new ShiftTypeTime('17:00')
 
         expect(() => {
           schedule.assignShiftWithCustomTime(
@@ -415,22 +439,11 @@ describe('ShiftSchedule', () => {
   })
 
   describe('unassign', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-    const shiftTypeId = ShiftTypeId.create()
-
-    // 日付生成のヘルパー関数
-    const createDate = (day: number): ShiftAssignmentDate => {
-      return new ShiftAssignmentDate(
-        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      )
-    }
-
     it('正常にシフトアサインを解除できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const shiftTypeId = ShiftTypeId.create()
 
       schedule.assignShift(date, employeeId, shiftTypeId)
       expect(schedule.shiftAssignments).toHaveLength(1)
@@ -439,16 +452,17 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftAssignments).toHaveLength(0)
     })
 
-    it('解除後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('解除後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const shiftTypeId = ShiftTypeId.create()
 
       schedule.assignShift(date, employeeId, shiftTypeId)
       const updatedAtAfterAssign = schedule.updatedAt
 
-      // 少し待ってから解除（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.unassign(date, employeeId)
 
       // Temporal.Instantの比較を使用
@@ -460,9 +474,9 @@ describe('ShiftSchedule', () => {
     })
 
     it('存在しないアサインを解除しようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       expect(() => {
         schedule.unassign(date, employeeId)
@@ -470,10 +484,11 @@ describe('ShiftSchedule', () => {
     })
 
     it('異なる従業員のアサインは解除できない', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId1 = EmployeeId.create()
       const employeeId2 = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
+      const shiftTypeId = ShiftTypeId.create()
 
       schedule.assignShift(date, employeeId1, shiftTypeId)
 
@@ -482,38 +497,15 @@ describe('ShiftSchedule', () => {
       }).toThrow(ShiftAssignmentNotFoundError)
     })
 
-    it('異なる日付のアサインは解除できない', () => {
-      const schedule = ShiftSchedule.create(year, month)
-      const employeeId = EmployeeId.create()
-      const date1 = createDate(15)
-      const date2 = createDate(16)
-
-      schedule.assignShift(date1, employeeId, shiftTypeId)
-
-      expect(() => {
-        schedule.unassign(date2, employeeId)
-      }).toThrow(ShiftAssignmentNotFoundError)
-    })
-
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールから解除しようとするとエラーを投げる', () => {
-        // 過去の年月でスケジュールを作成（確実に過去になるように）
-        const pastYearValue = getPastYear()
-        const pastMonthValue = getPastMonth()
-
-        // 過去の年月が生成できない場合はスキップ
-        if (pastYearValue === null || pastMonthValue === null) {
-          // テストをスキップ（過去の年月が生成できない場合）
-          return
-        }
-
-        const pastYear = new ShiftScheduleYear(pastYearValue)
-        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
-        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const schedule = ShiftSchedule.create(validYear, validMonth)
         const employeeId = EmployeeId.create()
-        const date = new ShiftAssignmentDate(
-          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
-        )
+        const date = new ShiftAssignmentDate('2026-06-15')
+        const shiftTypeId = ShiftTypeId.create()
+        schedule.assignShift(date, employeeId, shiftTypeId)
+        // 年月を進める
+        makeFuture()
 
         expect(() => {
           schedule.unassign(date, employeeId)
@@ -523,21 +515,10 @@ describe('ShiftSchedule', () => {
   })
 
   describe('grantPublicHoliday', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
-    // 日付生成のヘルパー関数
-    const createDate = (day: number): ShiftAssignmentDate => {
-      return new ShiftAssignmentDate(
-        `${getFutureYear()}-${String(getFutureMonth()).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      )
-    }
-
     it('正常に公休を付与できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.grantPublicHoliday(date, employeeId)
 
@@ -550,14 +531,14 @@ describe('ShiftSchedule', () => {
       )
     })
 
-    it('付与後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('付与後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
-      // 少し待ってから付与（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.grantPublicHoliday(date, employeeId)
 
       // Temporal.Instantの比較を使用
@@ -568,10 +549,10 @@ describe('ShiftSchedule', () => {
       expect(comparison).toBeGreaterThan(0)
     })
 
-    it('既に存在するアサインに再度付与しようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('既に存在する公休に再度付与しようとするとエラーを投げる', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.grantPublicHoliday(date, employeeId)
 
@@ -581,10 +562,10 @@ describe('ShiftSchedule', () => {
     })
 
     it('異なる従業員の同じ日付には付与できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId1 = EmployeeId.create()
       const employeeId2 = EmployeeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.grantPublicHoliday(date, employeeId1)
       schedule.grantPublicHoliday(date, employeeId2)
@@ -593,10 +574,10 @@ describe('ShiftSchedule', () => {
     })
 
     it('同じ従業員の異なる日付には付与できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
-      const date1 = createDate(15)
-      const date2 = createDate(16)
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
 
       schedule.grantPublicHoliday(date1, employeeId)
       schedule.grantPublicHoliday(date2, employeeId)
@@ -605,10 +586,10 @@ describe('ShiftSchedule', () => {
     })
 
     it('既にシフトがアサインされている日付には公休を付与できない', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const employeeId = EmployeeId.create()
       const shiftTypeId = ShiftTypeId.create()
-      const date = createDate(15)
+      const date = new ShiftAssignmentDate('2026-07-15')
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
@@ -619,23 +600,11 @@ describe('ShiftSchedule', () => {
 
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールに付与しようとするとエラーを投げる', () => {
-        // 過去の年月でスケジュールを作成（確実に過去になるように）
-        const pastYearValue = getPastYear()
-        const pastMonthValue = getPastMonth()
-
-        // 過去の年月が生成できない場合はスキップ
-        if (pastYearValue === null || pastMonthValue === null) {
-          // テストをスキップ（過去の年月が生成できない場合）
-          return
-        }
-
-        const pastYear = new ShiftScheduleYear(pastYearValue)
-        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
-        const schedule = ShiftSchedule.create(pastYear, pastMonth)
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        // 年月を進める
+        makeFuture()
         const employeeId = EmployeeId.create()
-        const date = new ShiftAssignmentDate(
-          `${pastYearValue}-${String(pastMonthValue).padStart(2, '0')}-15`
-        )
+        const date = new ShiftAssignmentDate('2026-06-15')
 
         expect(() => {
           schedule.grantPublicHoliday(date, employeeId)
@@ -644,25 +613,9 @@ describe('ShiftSchedule', () => {
     })
   })
 
-  describe('isPublished', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
-    it('初期状態ではfalseを返す', () => {
-      const schedule = ShiftSchedule.create(year, month)
-
-      expect(schedule.isPublished).toBe(false)
-    })
-  })
-
   describe('publish', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
     it('シフトスケジュールを公開できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       expect(schedule.isPublished).toBe(false)
 
@@ -671,12 +624,12 @@ describe('ShiftSchedule', () => {
       expect(schedule.isPublished).toBe(true)
     })
 
-    it('公開後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('公開後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
 
-      // 少し待ってから公開（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.publish()
 
       // Temporal.Instantの比較を使用
@@ -688,27 +641,28 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に公開されている場合でもエラーを投げずに処理できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       schedule.publish()
       expect(schedule.isPublished).toBe(true)
 
-      // 再度公開してもエラーが発生しない
-      expect(() => {
-        schedule.publish()
-      }).not.toThrow()
-
+      schedule.publish()
       expect(schedule.isPublished).toBe(true)
+    })
+    describe('過去のスケジュールの場合', () => {
+      it('過去のスケジュールでも公開できる', () => {
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        // 年月を進める
+        makeFuture()
+        schedule.publish()
+        expect(schedule.isPublished).toBe(true)
+      })
     })
   })
 
   describe('unpublish', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
     it('シフトスケジュールを非公開にできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       schedule.publish()
       expect(schedule.isPublished).toBe(true)
@@ -718,14 +672,14 @@ describe('ShiftSchedule', () => {
       expect(schedule.isPublished).toBe(false)
     })
 
-    it('非公開後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('非公開後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       schedule.publish()
       const updatedAtAfterPublish = schedule.updatedAt
 
-      // 少し待ってから非公開（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.unpublish()
 
       // Temporal.Instantの比較を使用
@@ -737,20 +691,28 @@ describe('ShiftSchedule', () => {
     })
 
     it('既に非公開の場合でもエラーを投げずに処理できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       expect(schedule.isPublished).toBe(false)
 
-      // 非公開にしてもエラーが発生しない
-      expect(() => {
+      schedule.unpublish()
+
+      expect(schedule.isPublished).toBe(false)
+    })
+
+    describe('過去のスケジュールの場合', () => {
+      it('過去のスケジュールでも非公開できる', () => {
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        schedule.publish()
+        // 年月を進める
+        makeFuture()
         schedule.unpublish()
-      }).not.toThrow()
-
-      expect(schedule.isPublished).toBe(false)
+        expect(schedule.isPublished).toBe(false)
+      })
     })
 
     it('公開と非公開を繰り返し切り替えできる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       expect(schedule.isPublished).toBe(false)
 
@@ -765,29 +727,12 @@ describe('ShiftSchedule', () => {
 
       schedule.unpublish()
       expect(schedule.isPublished).toBe(false)
-    })
-  })
-
-  describe('updatedAt', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
-    it('更新日時を取得できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
-
-      expect(schedule.updatedAt).toBeTruthy()
-      expect(schedule.updatedAt.value).toBeInstanceOf(Temporal.Instant)
     })
   })
 
   describe('createNotice', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
     it('正常にお知らせを作成できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const title = '来月のシフトについて'
       const content = '来月のシフト希望は25日までに提出してください。'
 
@@ -799,12 +744,12 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftNotices[0].shiftScheduleId).toBe(schedule.id)
     })
 
-    it('作成後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('作成後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
 
-      // 少し待ってから作成（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.createNotice('タイトル', '内容')
 
       // Temporal.Instantの比較を使用
@@ -816,7 +761,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('複数のお知らせを作成できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
 
       schedule.createNotice('タイトル1', '内容1')
       schedule.createNotice('タイトル2', '内容2')
@@ -830,20 +775,9 @@ describe('ShiftSchedule', () => {
 
     describe('過去のスケジュールの場合', () => {
       it('過去のスケジュールにお知らせを作成しようとするとエラーを投げる', () => {
-        // 過去の年月でスケジュールを作成（確実に過去になるように）
-        const pastYearValue = getPastYear()
-        const pastMonthValue = getPastMonth()
-
-        // 過去の年月が生成できない場合はスキップ
-        if (pastYearValue === null || pastMonthValue === null) {
-          // テストをスキップ（過去の年月が生成できない場合）
-          return
-        }
-
-        const pastYear = new ShiftScheduleYear(pastYearValue)
-        const pastMonth = new ShiftScheduleMonth(pastMonthValue)
-        const schedule = ShiftSchedule.create(pastYear, pastMonth)
-
+        const schedule = ShiftSchedule.create(validYear, validMonth)
+        // 年月を進める
+        makeFuture()
         expect(() => {
           schedule.createNotice('タイトル', '内容')
         }).toThrow(CannotEditPastShiftScheduleError)
@@ -852,12 +786,8 @@ describe('ShiftSchedule', () => {
   })
 
   describe('updateNotice', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
     it('正常にお知らせのタイトルと内容を更新できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('元のタイトル', '元の内容')
       const noticeId = schedule.shiftNotices[0].id
 
@@ -868,7 +798,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('タイトルのみを更新できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('元のタイトル', '元の内容')
       const noticeId = schedule.shiftNotices[0].id
       const originalContent = schedule.shiftNotices[0].content
@@ -880,7 +810,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('内容のみを更新できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('元のタイトル', '元の内容')
       const noticeId = schedule.shiftNotices[0].id
       const originalTitle = schedule.shiftNotices[0].title
@@ -891,14 +821,14 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftNotices[0].content).toBe('新しい内容')
     })
 
-    it('更新後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('更新後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('タイトル', '内容')
       const noticeId = schedule.shiftNotices[0].id
       const updatedAtAfterCreate = schedule.updatedAt
 
-      // 少し待ってから更新（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.updateNotice(noticeId, '新しいタイトル', '新しい内容')
 
       // Temporal.Instantの比較を使用
@@ -909,8 +839,26 @@ describe('ShiftSchedule', () => {
       expect(comparison).toBeGreaterThan(0)
     })
 
+    it('タイトルと内容を更新しない場合、updatedAtが更新されない', async () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      schedule.createNotice('タイトル', '内容')
+      const noticeId = schedule.shiftNotices[0].id
+      const updatedAtAfterCreate = schedule.updatedAt
+
+      // 少し待ってから更新（updatedAtの更新を確認するため）
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      schedule.updateNotice(noticeId)
+
+      // Temporal.Instantの比較を使用
+      const comparison = Temporal.Instant.compare(
+        schedule.updatedAt.value,
+        updatedAtAfterCreate.value
+      )
+      expect(comparison).toBe(0)
+    })
+
     it('存在しないお知らせを更新しようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const nonExistentId = ShiftNoticeId.create()
 
       expect(() => {
@@ -919,7 +867,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('複数のお知らせがある場合、指定したIDのお知らせのみが更新される', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('タイトル1', '内容1')
       schedule.createNotice('タイトル2', '内容2')
       const noticeId1 = schedule.shiftNotices[0].id
@@ -934,12 +882,8 @@ describe('ShiftSchedule', () => {
   })
 
   describe('deleteNotice', () => {
-    // 不変な値は describe で共有
-    const year = new ShiftScheduleYear(getFutureYear())
-    const month = new ShiftScheduleMonth(getFutureMonth())
-
     it('正常にお知らせを削除できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('タイトル1', '内容1')
       schedule.createNotice('タイトル2', '内容2')
       const noticeId1 = schedule.shiftNotices[0].id
@@ -952,14 +896,14 @@ describe('ShiftSchedule', () => {
       expect(schedule.shiftNotices[0].title).toBe('タイトル2')
     })
 
-    it('削除後にupdatedAtが更新される', async () => {
-      const schedule = ShiftSchedule.create(year, month)
+    it('削除後にupdatedAtが更新される', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('タイトル', '内容')
       const noticeId = schedule.shiftNotices[0].id
       const updatedAtAfterCreate = schedule.updatedAt
 
-      // 少し待ってから削除（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      mockUpdatedAt()
+
       schedule.deleteNotice(noticeId)
 
       // Temporal.Instantの比較を使用
@@ -971,7 +915,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('存在しないお知らせを削除しようとするとエラーを投げる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       const nonExistentId = ShiftNoticeId.create()
 
       expect(() => {
@@ -980,7 +924,7 @@ describe('ShiftSchedule', () => {
     })
 
     it('全てのお知らせを削除できる', () => {
-      const schedule = ShiftSchedule.create(year, month)
+      const schedule = ShiftSchedule.create(validYear, validMonth)
       schedule.createNotice('タイトル1', '内容1')
       schedule.createNotice('タイトル2', '内容2')
       schedule.createNotice('タイトル3', '内容3')
