@@ -1,17 +1,15 @@
+import { EmployeeId } from '@/domain/value-objects/employeeId'
+import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
+import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
 import { ShiftScheduleId } from '@/domain/value-objects/shiftScheduleId'
-import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
 import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
+import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
+import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
+import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import { TimeOffType } from '@/domain/value-objects/timeOffType'
+import { AppDateTime } from 'shared/appDateTime'
 import { ShiftAssignment } from './shiftAssignment'
 import { ShiftNotice } from './shiftNotice'
-import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
-import { EmployeeId } from '@/domain/value-objects/employeeId'
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { CreatedAt } from '@/domain/value-objects/createdAt'
-import { UpdatedAt } from '@/domain/value-objects/updatedAt'
-import { TimeOffType } from '@/domain/value-objects/timeOffType'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
-import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
-import { Temporal } from '@js-temporal/polyfill'
 
 /**
  * 過去のシフトスケジュールは作成できないエラー
@@ -70,15 +68,15 @@ export class ShiftSchedule {
     private _isPublished: boolean = false,
     public readonly shiftAssignments: ShiftAssignment[] = [],
     public readonly shiftNotices: ShiftNotice[] = [],
-    public readonly createdAt: CreatedAt = CreatedAt.now(),
-    private _updatedAt: UpdatedAt = UpdatedAt.now()
+    public readonly createdAt: AppDateTime = AppDateTime.now(),
+    private _updatedAt: AppDateTime = AppDateTime.now()
   ) {}
 
   get isPublished(): boolean {
     return this._isPublished
   }
 
-  get updatedAt(): UpdatedAt {
+  get updatedAt(): AppDateTime {
     return this._updatedAt
   }
 
@@ -87,8 +85,7 @@ export class ShiftSchedule {
     month: ShiftScheduleMonth
   ): ShiftSchedule {
     // 年月が先月以前の場合は作成できない
-    // JST（Asia/Tokyo）で現在の日付を取得
-    const now = Temporal.Now.zonedDateTimeISO('Asia/Tokyo').toPlainDate()
+    const now = AppDateTime.now()
     const thisYear = now.year
     const thisMonth = now.month
 
@@ -131,7 +128,7 @@ export class ShiftSchedule {
       shiftTypeId
     )
     this.shiftAssignments.push(shiftAssignment)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -160,7 +157,7 @@ export class ShiftSchedule {
       customEndTime
     )
     this.shiftAssignments.push(shiftAssignment)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -187,7 +184,7 @@ export class ShiftSchedule {
         assignment.employeeId.equals(employeeId)
     )
     this.shiftAssignments.splice(index, 1)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -216,7 +213,7 @@ export class ShiftSchedule {
       timeOffType
     )
     this.shiftAssignments.push(shiftAssignment)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -227,7 +224,7 @@ export class ShiftSchedule {
       return
     }
     this._isPublished = true
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -238,7 +235,7 @@ export class ShiftSchedule {
       return
     }
     this._isPublished = false
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -247,7 +244,7 @@ export class ShiftSchedule {
    */
   private isPast(): boolean {
     // JST（Asia/Tokyo）で現在の日付を取得
-    const now = Temporal.Now.zonedDateTimeISO('Asia/Tokyo').toPlainDate()
+    const now = AppDateTime.now()
     const currentYear = now.year
     const currentMonth = now.month
     const scheduleYear = this.year.value
@@ -295,7 +292,7 @@ export class ShiftSchedule {
 
     const notice = ShiftNotice.create(this.id, title, content)
     this.shiftNotices.push(notice)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 
   /**
@@ -318,7 +315,7 @@ export class ShiftSchedule {
     if (title) notice.updateTitle(title)
     if (content) notice.updateContent(content)
     if (title || content) {
-      this._updatedAt = UpdatedAt.now()
+      this._updatedAt = AppDateTime.now()
     }
   }
 
@@ -338,6 +335,6 @@ export class ShiftSchedule {
     }
 
     this.shiftNotices.splice(index, 1)
-    this._updatedAt = UpdatedAt.now()
+    this._updatedAt = AppDateTime.now()
   }
 }

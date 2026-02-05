@@ -12,6 +12,7 @@ jest.mock('shared/appDateTime', () => {
     AppDateTime: {
       ...actual.AppDateTime,
       now: () => mockNowAppDateTime ?? actual.AppDateTime.now(),
+      from: actual.AppDateTime.from,
     },
   }
 })
@@ -21,5 +22,12 @@ jest.mock('shared/appDateTime', () => {
  * @param appDateTime - AppDateTime
  */
 export function setMockNow(appDateTime: AppDateTime): void {
-  mockNowAppDateTime = appDateTime
+  mockNowAppDateTime = AppDateTime.from(
+    appDateTime.year,
+    appDateTime.month,
+    appDateTime.day,
+    appDateTime.hour,
+    appDateTime.minute,
+    appDateTime.second
+  )
 }

@@ -1,74 +1,35 @@
-import { ShiftSchedule } from './shiftSchedule'
+import { EmployeeId } from '@/domain/value-objects/employeeId'
+import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
+import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
+import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
+import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
+import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
+import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import { AppDateTime } from 'shared/appDateTime'
+import { setMockNow } from 'shared/testUtils/mockAppDateTime'
 import {
   CannotCreatePastShiftScheduleError,
   CannotEditPastShiftScheduleError,
   ShiftAssignmentAlreadyExistsError,
   ShiftAssignmentNotFoundError,
   ShiftNoticeNotFoundError,
+  ShiftSchedule,
 } from './shiftSchedule'
-import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
-import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
-import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
-import { EmployeeId } from '@/domain/value-objects/employeeId'
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
-import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
-import { Temporal } from '@js-temporal/polyfill'
 
-// 固定の日時を使用するためのモック
-let mockNowZDT: ReturnType<typeof Temporal.ZonedDateTime.from> =
-  Temporal.ZonedDateTime.from('2026-06-15T12:00:00+09:00[Asia/Tokyo]')
-jest.mock('@js-temporal/polyfill', () => {
-  const actual = jest.requireActual<typeof import('@js-temporal/polyfill')>(
-    '@js-temporal/polyfill'
-  )
-  return {
-    ...actual,
-    Temporal: {
-      ...actual.Temporal,
-      Now: {
-        ...actual.Temporal.Now,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        zonedDateTimeISO: (timeZone: string) => mockNowZDT,
-        instant: () => mockNowZDT.toInstant(),
-      },
-    },
-  }
-})
-const makeFuture = () => {
-  mockNowZDT = Temporal.ZonedDateTime.from(
-    '2027-06-15T12:00:00+09:00[Asia/Tokyo]'
-  )
-}
+const mockNowAppDateTime = AppDateTime.from(2026, 6, 15, 12, 0, 0)
 
-// updatedAtをモックする
-let updateInstant: Temporal.Instant = mockNowZDT.toInstant()
-jest.mock('@/domain/value-objects/updatedAt', () => {
-  const actual = jest.requireActual<
-    typeof import('@/domain/value-objects/updatedAt')
-  >('@/domain/value-objects/updatedAt')
-  return {
-    ...actual,
-    UpdatedAt: {
-      ...actual.UpdatedAt,
-      now: () => new actual.UpdatedAt(updateInstant),
-    },
-  }
-})
-const mockUpdatedAt = () => {
-  updateInstant = Temporal.ZonedDateTime.from(
-    '2026-06-15T20:00:00+09:00[Asia/Tokyo]'
-  ).toInstant()
-}
+// 現在日時を未来にする
+const makeFuture = () => setMockNow(AppDateTime.from(2027, 6, 15, 12, 0, 0))
+
+// 更新日時を未来にする
+const makeUpdatedAtFuture = () =>
+  setMockNow(AppDateTime.from(2026, 6, 15, 20, 0, 0))
 
 const validYear = new ShiftScheduleYear(2026)
 const validMonth = new ShiftScheduleMonth(7)
 
-afterEach(() => {
-  mockNowZDT = Temporal.ZonedDateTime.from(
-    '2026-06-15T12:00:00+09:00[Asia/Tokyo]'
-  )
-  updateInstant = mockNowZDT.toInstant()
+beforeEach(() => {
+  setMockNow(mockNowAppDateTime)
 })
 
 describe('ShiftSchedule', () => {
@@ -84,8 +45,7 @@ describe('ShiftSchedule', () => {
     it('更新日時を取得できる', () => {
       const schedule = ShiftSchedule.create(validYear, validMonth)
 
-      expect(schedule.updatedAt).toBeTruthy()
-      expect(schedule.updatedAt.value).toBeInstanceOf(Temporal.Instant)
+      expect(schedule.updatedAt.equals(mockNowAppDateTime)).toBe(true)
     })
   })
 
@@ -99,8 +59,8 @@ describe('ShiftSchedule', () => {
       expect(schedule.isPublished).toBe(false)
       expect(schedule.shiftAssignments).toEqual([])
       expect(schedule.shiftNotices).toEqual([])
-      expect(schedule.createdAt).toBeTruthy()
-      expect(schedule.updatedAt).toBeTruthy()
+      expect(schedule.createdAt.equals(mockNowAppDateTime)).toBe(true)
+      expect(schedule.updatedAt.equals(mockNowAppDateTime)).toBe(true)
     })
 
     it('毎回異なるIDが生成される', () => {
@@ -162,15 +122,11 @@ describe('ShiftSchedule', () => {
       const employeeId = EmployeeId.create()
       const date = new ShiftAssignmentDate('2026-07-15')
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        initialUpdatedAt.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(initialUpdatedAt)).toBe(true)
     })
 
     it('既に存在するアサインに再度アサインしようとするとエラーを投げる', () => {
@@ -288,7 +244,7 @@ describe('ShiftSchedule', () => {
       const customStartTime = new ShiftTypeTime('09:00')
       const customEndTime = new ShiftTypeTime('17:00')
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.assignShiftWithCustomTime(
         date,
@@ -297,12 +253,7 @@ describe('ShiftSchedule', () => {
         customEndTime
       )
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        initialUpdatedAt.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(initialUpdatedAt)).toBe(true)
     })
 
     it('既に存在するアサインに再度アサインしようとするとエラーを投げる', () => {
@@ -461,16 +412,11 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date, employeeId, shiftTypeId)
       const updatedAtAfterAssign = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.unassign(date, employeeId)
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        updatedAtAfterAssign.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(updatedAtAfterAssign)).toBe(true)
     })
 
     it('存在しないアサインを解除しようとするとエラーを投げる', () => {
@@ -537,16 +483,11 @@ describe('ShiftSchedule', () => {
       const employeeId = EmployeeId.create()
       const date = new ShiftAssignmentDate('2026-07-15')
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.grantPublicHoliday(date, employeeId)
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        initialUpdatedAt.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(initialUpdatedAt)).toBe(true)
     })
 
     it('既に存在する公休に再度付与しようとするとエラーを投げる', () => {
@@ -628,16 +569,11 @@ describe('ShiftSchedule', () => {
       const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.publish()
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        initialUpdatedAt.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(initialUpdatedAt)).toBe(true)
     })
 
     it('既に公開されている場合でもエラーを投げずに処理できる', () => {
@@ -678,16 +614,11 @@ describe('ShiftSchedule', () => {
       schedule.publish()
       const updatedAtAfterPublish = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.unpublish()
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        updatedAtAfterPublish.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(updatedAtAfterPublish)).toBe(true)
     })
 
     it('既に非公開の場合でもエラーを投げずに処理できる', () => {
@@ -748,16 +679,11 @@ describe('ShiftSchedule', () => {
       const schedule = ShiftSchedule.create(validYear, validMonth)
       const initialUpdatedAt = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.createNotice('タイトル', '内容')
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        initialUpdatedAt.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(initialUpdatedAt)).toBe(true)
     })
 
     it('複数のお知らせを作成できる', () => {
@@ -827,16 +753,11 @@ describe('ShiftSchedule', () => {
       const noticeId = schedule.shiftNotices[0].id
       const updatedAtAfterCreate = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.updateNotice(noticeId, '新しいタイトル', '新しい内容')
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        updatedAtAfterCreate.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(updatedAtAfterCreate)).toBe(true)
     })
 
     it('タイトルと内容を更新しない場合、updatedAtが更新されない', async () => {
@@ -845,16 +766,11 @@ describe('ShiftSchedule', () => {
       const noticeId = schedule.shiftNotices[0].id
       const updatedAtAfterCreate = schedule.updatedAt
 
-      // 少し待ってから更新（updatedAtの更新を確認するため）
-      await new Promise((resolve) => setTimeout(resolve, 10))
+      makeUpdatedAtFuture()
+
       schedule.updateNotice(noticeId)
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        updatedAtAfterCreate.value
-      )
-      expect(comparison).toBe(0)
+      expect(schedule.updatedAt.equals(updatedAtAfterCreate)).toBe(true)
     })
 
     it('存在しないお知らせを更新しようとするとエラーを投げる', () => {
@@ -902,16 +818,11 @@ describe('ShiftSchedule', () => {
       const noticeId = schedule.shiftNotices[0].id
       const updatedAtAfterCreate = schedule.updatedAt
 
-      mockUpdatedAt()
+      makeUpdatedAtFuture()
 
       schedule.deleteNotice(noticeId)
 
-      // Temporal.Instantの比較を使用
-      const comparison = Temporal.Instant.compare(
-        schedule.updatedAt.value,
-        updatedAtAfterCreate.value
-      )
-      expect(comparison).toBeGreaterThan(0)
+      expect(schedule.updatedAt.isAfter(updatedAtAfterCreate)).toBe(true)
     })
 
     it('存在しないお知らせを削除しようとするとエラーを投げる', () => {
