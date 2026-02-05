@@ -18,6 +18,7 @@ export default {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^shared/(.*)$': '<rootDir>/../shared/src/$1',
   },
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
 }
