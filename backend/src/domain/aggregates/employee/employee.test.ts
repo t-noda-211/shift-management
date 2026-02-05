@@ -1,7 +1,8 @@
-import { Employee } from './employee'
-import { EmployeeId } from '@/domain/value-objects/employeeId'
 import { EmployeeFullName } from '@/domain/value-objects/employeeFullName'
+import { EmployeeId } from '@/domain/value-objects/employeeId'
 import { EmployeeType } from '@/domain/value-objects/employeeType'
+
+import { Employee } from './employee'
 
 describe('Employee', () => {
   describe('create', () => {

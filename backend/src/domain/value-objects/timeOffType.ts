@@ -1,5 +1,5 @@
-import { ValueObjectError } from './valueObjectError'
 import type { ValueObject } from './valueObject'
+import { ValueObjectError } from './valueObjectError'
 
 /**
  * 休暇種別の表示名の型

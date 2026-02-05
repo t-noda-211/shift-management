@@ -7,6 +7,9 @@
   "useTabs": false,
   "endOfLine": "lf",
   "proseWrap": "preserve",
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": ["^[^.]", "^[.]"],
+  "importOrderSeparation": true,
   "overrides": [
     {
       "files": "*.md",

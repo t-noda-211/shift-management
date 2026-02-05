@@ -1,6 +1,7 @@
 import { ulid, isValid as isValidUlid } from 'ulidx'
-import { ValueObjectError } from './valueObjectError'
+
 import type { ValueObject } from './valueObject'
+import { ValueObjectError } from './valueObjectError'
 
 export class InvalidShiftTypeIdError extends ValueObjectError {
   constructor() {

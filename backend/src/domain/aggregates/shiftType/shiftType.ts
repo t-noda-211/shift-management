@@ -1,6 +1,7 @@
 import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
 import { ShiftTypeName } from '@/domain/value-objects/shiftTypeName'
 import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+
 import { AggregateError } from '../aggregateError'
 
 /**

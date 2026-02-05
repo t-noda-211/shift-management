@@ -1,5 +1,5 @@
-import { ValueObjectError } from './valueObjectError'
 import type { ValueObject } from './valueObject'
+import { ValueObjectError } from './valueObjectError'
 
 export class InvalidShiftTypeNameError extends ValueObjectError {
   constructor() {
