@@ -66,4 +66,25 @@ describe('AppDateTime', () => {
       expect(() => AppDateTime.from(NaN, 1, 1)).toThrow(InvalidAppDateTimeError)
     })
   })
+
+  describe('equals', () => {
+    it('同じ日時の場合、trueを返す', () => {
+      const dt = AppDateTime.from(2026, 2, 4, 14, 30, 45)
+      expect(dt.equals(AppDateTime.from(2026, 2, 4, 14, 30, 45))).toBe(true)
+    })
+  })
+
+  describe('isAfter', () => {
+    it('指定された日時より後の場合、trueを返す', () => {
+      const dt = AppDateTime.from(2026, 2, 4, 14, 30, 45)
+      expect(dt.isAfter(AppDateTime.from(2026, 2, 4, 14, 30, 44))).toBe(true)
+    })
+  })
+
+  describe('isBefore', () => {
+    it('指定された日時より前の場合、trueを返す', () => {
+      const dt = AppDateTime.from(2026, 2, 4, 14, 30, 45)
+      expect(dt.isBefore(AppDateTime.from(2026, 2, 4, 14, 30, 46))).toBe(true)
+    })
+  })
 })

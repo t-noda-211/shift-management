@@ -12,6 +12,16 @@ export class InvalidAppDateTimeError extends SharedError {
  * Temporal.Instant で日時を保持する
  * 特殊な操作をするためにvalueを公開しているが、基本的にはvalueを使用せずにメソッド経由で使用すること
  * そのために、複数箇所で使用する可能性がある場合はメソッドを作成する
+ *
+ * @example
+ * const now = AppDateTime.now()
+ * const jst = now.toJstString()
+ * const utc = now.toUtcString()
+ * const year = now.year
+ * const month = now.month
+ * const day = now.day
+ * const hour = now.hour
+ * const minute = now.minute
  */
 export class AppDateTime {
   private constructor(readonly value: Temporal.Instant) {}
@@ -60,12 +70,16 @@ export class AppDateTime {
     }
   }
 
+  private toZonedDateTimeISOJst(): Temporal.ZonedDateTime {
+    return this.value.toZonedDateTimeISO('Asia/Tokyo')
+  }
+
   /**
    * JST（日本標準時）での日時を ISO 8601 形式の文字列で返す
    * フォーマット例: 2026-06-15T21:00:00+09:00
    */
   toJstString(): string {
-    const jst = this.value.toZonedDateTimeISO('Asia/Tokyo')
+    const jst = this.toZonedDateTimeISOJst()
     return `${jst.toPlainDateTime().toString()}${jst.offset}`
   }
 
@@ -75,5 +89,56 @@ export class AppDateTime {
    */
   toUtcString(): string {
     return this.value.toString()
+  }
+
+  get year(): number {
+    return this.toZonedDateTimeISOJst().year
+  }
+
+  get month(): number {
+    return this.toZonedDateTimeISOJst().month
+  }
+
+  get day(): number {
+    return this.toZonedDateTimeISOJst().day
+  }
+
+  get hour(): number {
+    return this.toZonedDateTimeISOJst().hour
+  }
+
+  get minute(): number {
+    return this.toZonedDateTimeISOJst().minute
+  }
+
+  get second(): number {
+    return this.toZonedDateTimeISOJst().second
+  }
+
+  /**
+   * 指定された日時と等しいかどうかを判定する
+   * @param other 比較対象の日時
+   * @returns 等しい場合はtrue、異なる場合はfalse
+   */
+  equals(other: AppDateTime): boolean {
+    return Temporal.Instant.compare(this.value, other.value) === 0
+  }
+
+  /**
+   * 指定された日時より後かどうかを判定する
+   * @param other 比較対象の日時
+   * @returns 後の場合はtrue、前の場合はfalse
+   */
+  isAfter(other: AppDateTime): boolean {
+    return Temporal.Instant.compare(this.value, other.value) > 0
+  }
+
+  /**
+   * 指定された日時より前かどうかを判定する
+   * @param other 比較対象の日時
+   * @returns 前の場合はtrue、後の場合はfalse
+   */
+  isBefore(other: AppDateTime): boolean {
+    return Temporal.Instant.compare(this.value, other.value) < 0
   }
 }
