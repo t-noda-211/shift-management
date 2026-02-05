@@ -1,5 +1,4 @@
-import { CreatedAt } from '@/domain/value-objects/createdAt'
-import { UpdatedAt } from '@/domain/value-objects/updatedAt'
+import { AppDateTime } from 'shared/appDateTime'
 
 export type ShiftAssignmentHistoryEmployee = {
   id: string // 従業員は現在の情報と紐づけたい可能性があるためidを持っておく
@@ -38,6 +37,6 @@ export type ShiftScheduleHistory = {
   month: number
   shiftAssignments: ShiftAssignmentHistory[]
   shiftNotices: ShiftNoticeHistory[]
-  createdAt: CreatedAt
-  updatedAt: UpdatedAt
+  createdAt: AppDateTime
+  updatedAt: AppDateTime
 }
