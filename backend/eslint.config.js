@@ -21,8 +21,31 @@ export default tseslint.config(
       },
     },
   },
-  // 集約・valueObject: index.ts からのインポートのみ許可、直接インポート禁止
-  // value-objects 内の内部インポート（基底クラス・テスト）は許可
+  // 値オブジェクトの設定
+  {
+    files: ['src/domain/value-objects/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates',
+                '**/aggregates/**',
+                '../aggregates',
+                '../aggregates/**',
+                '../../aggregates',
+                '../../aggregates/**',
+              ],
+              message: '値オブジェクトから集約をインポートすることはできません',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // index.ts からのインポートのみ許可、直接インポート禁止
   {
     files: ['src/**/*.ts'],
     ignores: [
