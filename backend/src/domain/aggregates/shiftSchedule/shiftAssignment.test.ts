@@ -6,7 +6,7 @@ import {
   ShiftTypeId,
   ShiftTypeTime,
   TimeOffType,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 
 import { ShiftAssignment } from './shiftAssignment'
 import {

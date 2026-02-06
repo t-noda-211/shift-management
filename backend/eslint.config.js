@@ -23,7 +23,7 @@ export default tseslint.config(
   },
   // 値オブジェクトの設定
   {
-    files: ['src/domain/value-objects/**/*.ts'],
+    files: ['src/domain/valueObjects/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -50,9 +50,9 @@ export default tseslint.config(
     files: ['src/**/*.ts'],
     ignores: [
       '**/aggregates/*/index.ts',
-      '**/value-objects/index.ts',
-      '**/value-objects/*.ts',
-      '**/value-objects/*.test.ts',
+      '**/valueObjects/index.ts',
+      '**/valueObjects/*.ts',
+      '**/valueObjects/*.test.ts',
     ],
     rules: {
       'no-restricted-imports': [
@@ -83,15 +83,15 @@ export default tseslint.config(
             },
             {
               group: [
-                '**/value-objects/employee*',
-                '**/value-objects/shift*',
-                '**/value-objects/timeOff*',
-                '**/value-objects/valueObject',
-                '**/value-objects/valueObject.*',
-                '**/value-objects/valueObjectError',
-                '**/value-objects/valueObjectError.*',
-                '**/value-objects/workSummary',
-                '**/value-objects/workSummary.*',
+                '**/valueObjects/employee*',
+                '**/valueObjects/shift*',
+                '**/valueObjects/timeOff*',
+                '**/valueObjects/valueObject',
+                '**/valueObjects/valueObject.*',
+                '**/valueObjects/valueObjectError',
+                '**/valueObjects/valueObjectError.*',
+                '**/valueObjects/workSummary',
+                '**/valueObjects/workSummary.*',
                 './employeeFullName',
                 './employeeId',
                 './employeeType',

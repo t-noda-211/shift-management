@@ -2,7 +2,7 @@ import {
   EmployeeFullName,
   EmployeeId,
   EmployeeType,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 
 /**
  * Employee エンティティ

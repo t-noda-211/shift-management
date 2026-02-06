@@ -8,7 +8,7 @@ import {
   ShiftTypeId,
   ShiftTypeTime,
   TimeOffType,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 import { AppDateTime } from 'shared/appDateTime'
 
 import { ShiftAssignment } from './shiftAssignment'

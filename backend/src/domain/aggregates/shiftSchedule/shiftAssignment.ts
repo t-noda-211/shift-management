@@ -6,7 +6,7 @@ import {
   ShiftTypeId,
   ShiftTypeTime,
   TimeOffType,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 
 import { AggregateError } from '../aggregateError'
 

@@ -2,7 +2,7 @@ import {
   ShiftTypeId,
   ShiftTypeName,
   ShiftTypeTime,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 
 import { ShiftType, EndTimeMustBeAfterStartTimeError } from '.'
 

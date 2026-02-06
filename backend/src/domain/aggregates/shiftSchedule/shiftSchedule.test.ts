@@ -6,7 +6,7 @@ import {
   ShiftScheduleYear,
   ShiftTypeId,
   ShiftTypeTime,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 import { AppDateTime } from 'shared/appDateTime'
 import { setMockNow } from 'shared/testUtils/mockAppDateTime'
 

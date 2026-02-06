@@ -5,7 +5,7 @@ import {
   ShiftNoticeId,
   ShiftNoticeTitle,
   ShiftScheduleId,
-} from '@/domain/value-objects'
+} from '@/domain/valueObjects'
 
 import { ShiftNotice } from './shiftNotice'
 
