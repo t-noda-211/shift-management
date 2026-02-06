@@ -1,9 +1,11 @@
-import { ShiftNoticeContent } from '@/domain/value-objects/shiftNoticeContent'
-import { InvalidShiftNoticeContentError } from '@/domain/value-objects/shiftNoticeContent'
-import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
-import { ShiftNoticeTitle } from '@/domain/value-objects/shiftNoticeTitle'
-import { InvalidShiftNoticeTitleError } from '@/domain/value-objects/shiftNoticeTitle'
-import { ShiftScheduleId } from '@/domain/value-objects/shiftScheduleId'
+import {
+  InvalidShiftNoticeContentError,
+  InvalidShiftNoticeTitleError,
+  ShiftNoticeContent,
+  ShiftNoticeId,
+  ShiftNoticeTitle,
+  ShiftScheduleId,
+} from '@/domain/value-objects'
 
 import { ShiftNotice } from './shiftNotice'
 

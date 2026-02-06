@@ -1,8 +1,10 @@
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { ShiftTypeName } from '@/domain/value-objects/shiftTypeName'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import {
+  ShiftTypeId,
+  ShiftTypeName,
+  ShiftTypeTime,
+} from '@/domain/value-objects'
 
-import { ShiftType, EndTimeMustBeAfterStartTimeError } from './shiftType'
+import { ShiftType, EndTimeMustBeAfterStartTimeError } from '.'
 
 describe('ShiftType', () => {
   describe('create', () => {

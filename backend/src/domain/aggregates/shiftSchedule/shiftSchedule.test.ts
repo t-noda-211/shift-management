@@ -1,10 +1,12 @@
-import { EmployeeId } from '@/domain/value-objects/employeeId'
-import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
-import { ShiftNoticeId } from '@/domain/value-objects/shiftNoticeId'
-import { ShiftScheduleMonth } from '@/domain/value-objects/shiftScheduleMonth'
-import { ShiftScheduleYear } from '@/domain/value-objects/shiftScheduleYear'
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import {
+  EmployeeId,
+  ShiftAssignmentDate,
+  ShiftNoticeId,
+  ShiftScheduleMonth,
+  ShiftScheduleYear,
+  ShiftTypeId,
+  ShiftTypeTime,
+} from '@/domain/value-objects'
 import { AppDateTime } from 'shared/appDateTime'
 import { setMockNow } from 'shared/testUtils/mockAppDateTime'
 
@@ -15,7 +17,7 @@ import {
   ShiftAssignmentNotFoundError,
   ShiftNoticeNotFoundError,
   ShiftSchedule,
-} from './shiftSchedule'
+} from '.'
 
 const mockNowAppDateTime = AppDateTime.from(2026, 6, 15, 12, 0, 0)
 

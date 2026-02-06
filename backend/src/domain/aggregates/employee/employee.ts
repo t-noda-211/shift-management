@@ -1,6 +1,8 @@
-import { EmployeeFullName } from '@/domain/value-objects/employeeFullName'
-import { EmployeeId } from '@/domain/value-objects/employeeId'
-import { EmployeeType } from '@/domain/value-objects/employeeType'
+import {
+  EmployeeFullName,
+  EmployeeId,
+  EmployeeType,
+} from '@/domain/value-objects'
 
 /**
  * Employee エンティティ

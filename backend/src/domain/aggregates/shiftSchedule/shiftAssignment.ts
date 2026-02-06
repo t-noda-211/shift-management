@@ -1,10 +1,12 @@
-import { EmployeeId } from '@/domain/value-objects/employeeId'
-import { ShiftAssignmentDate } from '@/domain/value-objects/shiftAssignmentDate'
-import { ShiftAssignmentId } from '@/domain/value-objects/shiftAssignmentId'
-import { ShiftScheduleId } from '@/domain/value-objects/shiftScheduleId'
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
-import { TimeOffType } from '@/domain/value-objects/timeOffType'
+import {
+  EmployeeId,
+  ShiftAssignmentDate,
+  ShiftAssignmentId,
+  ShiftScheduleId,
+  ShiftTypeId,
+  ShiftTypeTime,
+  TimeOffType,
+} from '@/domain/value-objects'
 
 import { AggregateError } from '../aggregateError'
 

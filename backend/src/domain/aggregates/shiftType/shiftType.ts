@@ -1,6 +1,8 @@
-import { ShiftTypeId } from '@/domain/value-objects/shiftTypeId'
-import { ShiftTypeName } from '@/domain/value-objects/shiftTypeName'
-import { ShiftTypeTime } from '@/domain/value-objects/shiftTypeTime'
+import {
+  ShiftTypeId,
+  ShiftTypeName,
+  ShiftTypeTime,
+} from '@/domain/value-objects'
 
 import { AggregateError } from '../aggregateError'
 
