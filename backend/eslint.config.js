@@ -21,30 +21,9 @@ export default tseslint.config(
       },
     },
   },
-  // 値オブジェクトの設定
-  {
-    files: ['src/domain/valueObjects/**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: [
-                '**/aggregates',
-                '**/aggregates/**',
-                '../aggregates',
-                '../aggregates/**',
-                '../../aggregates',
-                '../../aggregates/**',
-              ],
-              message: '値オブジェクトから集約をインポートすることはできません',
-            },
-          ],
-        },
-      ],
-    },
-  },
+  // ------------------------------------------------------------
+  // 全体的なインポート設定
+  // ------------------------------------------------------------
   // index.ts からのインポートのみ許可、直接インポート禁止
   {
     files: ['src/**/*.ts'],
@@ -112,6 +91,87 @@ export default tseslint.config(
                 './workSummary',
               ],
               message: '値オブジェクトは index からインポートしてください',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ------------------------------------------------------------
+  // 集約の設定
+  // ------------------------------------------------------------
+  // employee
+  {
+    files: ['src/domain/aggregates/employee/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates/shiftType',
+                '**/aggregates/shiftType/**',
+                '**/aggregates/shiftSchedule',
+                '**/aggregates/shiftSchedule/**',
+                '../shiftType',
+                '../shiftType/**',
+                '../shiftSchedule',
+                '../shiftSchedule/**',
+              ],
+              message: 'employeeは自分以外の集約をimportできない',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // shiftType
+  {
+    files: ['src/domain/aggregates/shiftType/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates/employee',
+                '**/aggregates/employee/**',
+                '**/aggregates/shiftSchedule',
+                '**/aggregates/shiftSchedule/**',
+                '../employee',
+                '../employee/**',
+                '../shiftSchedule',
+                '../shiftSchedule/**',
+              ],
+              message: 'shiftTypeは自分以外の集約をimportできない',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ------------------------------------------------------------
+  // 値オブジェクトの設定
+  // ------------------------------------------------------------
+  {
+    files: ['src/domain/valueObjects/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates',
+                '**/aggregates/**',
+                '../aggregates',
+                '../aggregates/**',
+                '../../aggregates',
+                '../../aggregates/**',
+              ],
+              message: '値オブジェクトから集約をインポートすることはできません',
             },
           ],
         },
