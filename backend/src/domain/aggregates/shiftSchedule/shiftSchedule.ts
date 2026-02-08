@@ -11,8 +11,10 @@ import {
 } from '@/domain/valueObjects'
 import { AppDateTime } from 'shared/appDateTime'
 
-import { ShiftAssignment } from './shiftAssignment'
+import { CustomShiftAssignment } from './customShiftAssignment'
 import { ShiftNotice } from './shiftNotice'
+import { StandardShiftAssignment } from './standardShiftAssignment'
+import { TimeOffAssignment } from './timeOffAssignment'
 
 /**
  * 過去のシフトスケジュールは作成できないエラー
@@ -33,11 +35,11 @@ export class CannotEditPastShiftScheduleError extends AggregateError {
 }
 
 /**
- * シフトアサインが既に存在するエラー
+ * アサインが既に存在するエラー
  */
-export class ShiftAssignmentAlreadyExistsError extends AggregateError {
+export class AssignmentAlreadyExistsError extends AggregateError {
   constructor() {
-    super('Shift assignment already exists')
+    super('Assignment already exists')
   }
 }
 
@@ -69,7 +71,9 @@ export class ShiftSchedule {
     public readonly year: ShiftScheduleYear,
     public readonly month: ShiftScheduleMonth,
     private _isPublished: boolean = false,
-    public readonly shiftAssignments: ShiftAssignment[] = [],
+    public readonly standardShiftAssignments: StandardShiftAssignment[] = [],
+    public readonly customShiftAssignments: CustomShiftAssignment[] = [],
+    public readonly timeOffAssignments: TimeOffAssignment[] = [],
     public readonly shiftNotices: ShiftNotice[] = [],
     public readonly createdAt: AppDateTime = AppDateTime.now(),
     private _updatedAt: AppDateTime = AppDateTime.now()
@@ -121,16 +125,16 @@ export class ShiftSchedule {
     }
     // シフトアサインが既に存在する場合はエラーを投げる
     if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
-      throw new ShiftAssignmentAlreadyExistsError()
+      throw new AssignmentAlreadyExistsError()
     }
 
-    const shiftAssignment = ShiftAssignment.createWithShiftType(
+    const shiftAssignment = StandardShiftAssignment.create(
       this.id,
       shiftAssignmentDate,
       employeeId,
       shiftTypeId
     )
-    this.shiftAssignments.push(shiftAssignment)
+    this.standardShiftAssignments.push(shiftAssignment)
     this._updatedAt = AppDateTime.now()
   }
 
@@ -149,17 +153,17 @@ export class ShiftSchedule {
     }
     // シフトアサインが既に存在する場合はエラーを投げる
     if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
-      throw new ShiftAssignmentAlreadyExistsError()
+      throw new AssignmentAlreadyExistsError()
     }
 
-    const shiftAssignment = ShiftAssignment.createWithCustomTime(
+    const shiftAssignment = CustomShiftAssignment.create(
       this.id,
       shiftAssignmentDate,
       employeeId,
       customStartTime,
       customEndTime
     )
-    this.shiftAssignments.push(shiftAssignment)
+    this.customShiftAssignments.push(shiftAssignment)
     this._updatedAt = AppDateTime.now()
   }
 
@@ -181,12 +185,12 @@ export class ShiftSchedule {
       throw new ShiftAssignmentNotFoundError()
     }
 
-    const index = this.shiftAssignments.findIndex(
+    const index = this.standardShiftAssignments.findIndex(
       (assignment) =>
         assignment.date.equals(shiftAssignmentDate) &&
         assignment.employeeId.equals(employeeId)
     )
-    this.shiftAssignments.splice(index, 1)
+    this.standardShiftAssignments.splice(index, 1)
     this._updatedAt = AppDateTime.now()
   }
 
@@ -205,17 +209,17 @@ export class ShiftSchedule {
     }
     // シフトアサインが既に存在する場合はエラーを投げる
     if (this.hasAssignment(shiftAssignmentDate, employeeId)) {
-      throw new ShiftAssignmentAlreadyExistsError()
+      throw new AssignmentAlreadyExistsError()
     }
 
     const timeOffType = TimeOffType.publicHoliday()
-    const shiftAssignment = ShiftAssignment.createWithTimeOff(
+    const shiftAssignment = TimeOffAssignment.create(
       this.id,
       shiftAssignmentDate,
       employeeId,
       timeOffType
     )
-    this.shiftAssignments.push(shiftAssignment)
+    this.timeOffAssignments.push(shiftAssignment)
     this._updatedAt = AppDateTime.now()
   }
 
@@ -263,7 +267,7 @@ export class ShiftSchedule {
   }
 
   /**
-   * 指定した従業員IDとシフトアサイン日が存在するかどうかを判定する
+   * 従業員と日付に紐づくアサインが存在するかどうかを判定する
    * @param shiftAssignmentDate アサイン日
    * @param employeeId 従業員ID
    * @returns 存在する場合はtrue、存在しない場合はfalse
@@ -272,10 +276,25 @@ export class ShiftSchedule {
     shiftAssignmentDate: ShiftAssignmentDate,
     employeeId: EmployeeId
   ): boolean {
-    return this.shiftAssignments.some(
+    const existsStandardShiftAssignment = this.standardShiftAssignments.some(
       (assignment) =>
         assignment.date.equals(shiftAssignmentDate) &&
         assignment.employeeId.equals(employeeId)
+    )
+    const existsCustomShiftAssignment = this.customShiftAssignments.some(
+      (assignment) =>
+        assignment.date.equals(shiftAssignmentDate) &&
+        assignment.employeeId.equals(employeeId)
+    )
+    const existsTimeOffAssignment = this.timeOffAssignments.some(
+      (assignment) =>
+        assignment.date.equals(shiftAssignmentDate) &&
+        assignment.employeeId.equals(employeeId)
+    )
+    return (
+      existsStandardShiftAssignment ||
+      existsCustomShiftAssignment ||
+      existsTimeOffAssignment
     )
   }
 

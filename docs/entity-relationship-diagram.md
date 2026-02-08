@@ -14,12 +14,18 @@ erDiagram
 
     %% ShiftSchedule集約
     ShiftSchedule
-    ShiftAssignment
+    StandardShiftAssignment
+    CustomShiftAssignment
+    TimeOffAssignment
     ShiftNotice
 
     ShiftType ||--o{ ShiftSchedule : ""
-    ShiftSchedule ||--o{ ShiftAssignment: ""
-    Employee ||--o{ ShiftAssignment: ""
+    ShiftSchedule ||--o{ StandardShiftAssignment: ""
+    ShiftSchedule ||--o{ CustomShiftAssignment: ""
+    ShiftSchedule ||--o{ TimeOffAssignment: ""
+    Employee ||--o{ StandardShiftAssignment: ""
+    Employee ||--o{ CustomShiftAssignment: ""
+    Employee ||--o{ TimeOffAssignment: ""
     ShiftSchedule ||--o{ ShiftNotice: ""
 ```
 
@@ -47,13 +53,23 @@ erDiagram
 
 - 1ヶ月に1つ存在する
 
-### ShiftAssignment
+### StandardShiftAssignment
 
-シフトアサイン
+標準シフトアサイン
 
-従業員のシフト状態を表すエンティティ。
+従業員のシフト区分に応じたシフト状態を表すエンティティ。
 
-シフト区分・休暇・カスタム勤務時間に対応
+### CustomShiftAssignment
+
+カスタムシフトアサイン
+
+従業員のカスタム時間のシフト状態を表すエンティティ。
+
+### TimeOffAssignment
+
+休日アサイン
+
+従業員の休日状態を表すエンティティ。
 
 ### ShiftNotice
 

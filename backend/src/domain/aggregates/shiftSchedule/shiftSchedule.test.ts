@@ -11,9 +11,9 @@ import { AppDateTime } from 'shared/appDateTime'
 import { setMockNow } from 'shared/testUtils/mockAppDateTime'
 
 import {
+  AssignmentAlreadyExistsError,
   CannotCreatePastShiftScheduleError,
   CannotEditPastShiftScheduleError,
-  ShiftAssignmentAlreadyExistsError,
   ShiftAssignmentNotFoundError,
   ShiftNoticeNotFoundError,
   ShiftSchedule,
@@ -60,7 +60,9 @@ describe('ShiftSchedule', () => {
       expect(schedule.year).toBe(validYear)
       expect(schedule.month).toBe(validMonth)
       expect(schedule.isPublished).toBe(false)
-      expect(schedule.shiftAssignments).toEqual([])
+      expect(schedule.standardShiftAssignments).toEqual([])
+      expect(schedule.customShiftAssignments).toEqual([])
+      expect(schedule.timeOffAssignments).toEqual([])
       expect(schedule.shiftNotices).toEqual([])
       expect(schedule.createdAt.equals(mockNowAppDateTime)).toBe(true)
       expect(schedule.updatedAt.equals(mockNowAppDateTime)).toBe(true)
@@ -113,10 +115,10 @@ describe('ShiftSchedule', () => {
 
       schedule.assignShift(date, employeeId, shiftTypeId)
 
-      expect(schedule.shiftAssignments).toHaveLength(1)
-      expect(schedule.shiftAssignments[0].employeeId).toBe(employeeId)
-      expect(schedule.shiftAssignments[0].date).toBe(date)
-      expect(schedule.shiftAssignments[0].shiftTypeId).toBe(shiftTypeId)
+      expect(schedule.standardShiftAssignments).toHaveLength(1)
+      expect(schedule.standardShiftAssignments[0].employeeId).toBe(employeeId)
+      expect(schedule.standardShiftAssignments[0].date).toBe(date)
+      expect(schedule.standardShiftAssignments[0].shiftTypeId).toBe(shiftTypeId)
     })
 
     it('アサイン後にupdatedAtが更新される', () => {
@@ -141,7 +143,7 @@ describe('ShiftSchedule', () => {
 
       expect(() => {
         schedule.assignShift(date, employeeId, shiftTypeId)
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     it('異なる従業員の同じ日付にはアサインできる', () => {
@@ -153,7 +155,7 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date, employeeId1, shiftTypeId)
       schedule.assignShift(date, employeeId2, shiftTypeId)
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.standardShiftAssignments).toHaveLength(2)
     })
 
     it('同じ従業員の異なる日付にはアサインできる', () => {
@@ -165,7 +167,7 @@ describe('ShiftSchedule', () => {
       schedule.assignShift(date1, employeeId, shiftTypeId)
       schedule.assignShift(date2, employeeId, shiftTypeId)
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.standardShiftAssignments).toHaveLength(2)
     })
 
     it('既に公休がアサインされている場合、再度シフトをアサインしようとするとエラーを投げる', () => {
@@ -177,7 +179,7 @@ describe('ShiftSchedule', () => {
 
       expect(() => {
         schedule.assignShift(date, employeeId, shiftTypeId)
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     it('既にカスタム時間のシフトがアサインされている場合、再度アサインしようとするとエラーを投げる', () => {
@@ -196,7 +198,7 @@ describe('ShiftSchedule', () => {
 
       expect(() => {
         schedule.assignShift(date, employeeId, shiftTypeId)
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     describe('過去のスケジュールの場合', () => {
@@ -230,13 +232,13 @@ describe('ShiftSchedule', () => {
         customEndTime
       )
 
-      expect(schedule.shiftAssignments).toHaveLength(1)
-      expect(schedule.shiftAssignments[0].employeeId).toBe(employeeId)
-      expect(schedule.shiftAssignments[0].date).toBe(date)
-      expect(schedule.shiftAssignments[0].customStartTime).toBe(customStartTime)
-      expect(schedule.shiftAssignments[0].customEndTime).toBe(customEndTime)
-      expect(schedule.shiftAssignments[0].shiftTypeId).toBeNull()
-      expect(schedule.shiftAssignments[0].timeOffType).toBeNull()
+      expect(schedule.customShiftAssignments).toHaveLength(1)
+      expect(schedule.customShiftAssignments[0].employeeId).toBe(employeeId)
+      expect(schedule.customShiftAssignments[0].date).toBe(date)
+      expect(schedule.customShiftAssignments[0].customStartTime).toBe(
+        customStartTime
+      )
+      expect(schedule.customShiftAssignments[0].customEndTime).toBe(customEndTime)
     })
 
     it('アサイン後にupdatedAtが更新される', () => {
@@ -280,7 +282,7 @@ describe('ShiftSchedule', () => {
           customStartTime,
           customEndTime
         )
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     it('異なる従業員の同じ日付にはアサインできる', () => {
@@ -304,7 +306,7 @@ describe('ShiftSchedule', () => {
         customEndTime
       )
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.customShiftAssignments).toHaveLength(2)
     })
 
     it('同じ従業員の異なる日付にはアサインできる', () => {
@@ -328,7 +330,7 @@ describe('ShiftSchedule', () => {
         customEndTime
       )
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.customShiftAssignments).toHaveLength(2)
     })
 
     it('既にシフトがアサインされている日付にはカスタム時間でアサインできない', () => {
@@ -348,7 +350,7 @@ describe('ShiftSchedule', () => {
           customStartTime,
           customEndTime
         )
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     it('既に公休がアサインされている場合、カスタム時間のシフトをアサインしようとするとエラーを投げる', () => {
@@ -367,7 +369,7 @@ describe('ShiftSchedule', () => {
           customStartTime,
           customEndTime
         )
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     describe('過去のスケジュールの場合', () => {
@@ -400,10 +402,10 @@ describe('ShiftSchedule', () => {
       const shiftTypeId = ShiftTypeId.create()
 
       schedule.assignShift(date, employeeId, shiftTypeId)
-      expect(schedule.shiftAssignments).toHaveLength(1)
+      expect(schedule.standardShiftAssignments).toHaveLength(1)
 
       schedule.unassign(date, employeeId)
-      expect(schedule.shiftAssignments).toHaveLength(0)
+      expect(schedule.standardShiftAssignments).toHaveLength(0)
     })
 
     it('解除後にupdatedAtが更新される', () => {
@@ -471,13 +473,13 @@ describe('ShiftSchedule', () => {
 
       schedule.grantPublicHoliday(date, employeeId)
 
-      expect(schedule.shiftAssignments).toHaveLength(1)
-      expect(schedule.shiftAssignments[0].employeeId).toBe(employeeId)
-      expect(schedule.shiftAssignments[0].date).toBe(date)
-      expect(schedule.shiftAssignments[0].timeOffType).toBeTruthy()
-      expect(schedule.shiftAssignments[0].timeOffType?.isPublicHoliday()).toBe(
-        true
-      )
+      expect(schedule.timeOffAssignments).toHaveLength(1)
+      expect(schedule.timeOffAssignments[0].employeeId).toBe(employeeId)
+      expect(schedule.timeOffAssignments[0].date).toBe(date)
+      expect(schedule.timeOffAssignments[0].timeOffType).toBeTruthy()
+      expect(
+        schedule.timeOffAssignments[0].timeOffType.isPublicHoliday()
+      ).toBe(true)
     })
 
     it('付与後にupdatedAtが更新される', () => {
@@ -502,7 +504,7 @@ describe('ShiftSchedule', () => {
 
       expect(() => {
         schedule.grantPublicHoliday(date, employeeId)
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     it('異なる従業員の同じ日付には付与できる', () => {
@@ -514,7 +516,7 @@ describe('ShiftSchedule', () => {
       schedule.grantPublicHoliday(date, employeeId1)
       schedule.grantPublicHoliday(date, employeeId2)
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.timeOffAssignments).toHaveLength(2)
     })
 
     it('同じ従業員の異なる日付には付与できる', () => {
@@ -526,7 +528,7 @@ describe('ShiftSchedule', () => {
       schedule.grantPublicHoliday(date1, employeeId)
       schedule.grantPublicHoliday(date2, employeeId)
 
-      expect(schedule.shiftAssignments).toHaveLength(2)
+      expect(schedule.timeOffAssignments).toHaveLength(2)
     })
 
     it('既にシフトがアサインされている日付には公休を付与できない', () => {
@@ -539,7 +541,7 @@ describe('ShiftSchedule', () => {
 
       expect(() => {
         schedule.grantPublicHoliday(date, employeeId)
-      }).toThrow(ShiftAssignmentAlreadyExistsError)
+      }).toThrow(AssignmentAlreadyExistsError)
     })
 
     describe('過去のスケジュールの場合', () => {

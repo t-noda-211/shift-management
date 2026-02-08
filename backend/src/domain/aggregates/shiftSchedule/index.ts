@@ -1,4 +1,5 @@
 export * from './shiftSchedule'
-export * from './shiftAssignment'
+export * from './standardShiftAssignment'
+export * from './customShiftAssignment'
+export * from './timeOffAssignment'
 export * from './shiftNotice'
-export * from './shiftScheduleHistory.type'
