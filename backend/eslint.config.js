@@ -1,6 +1,8 @@
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 
+const IMPORT_DEPENDENCY_ERROR_MESSAGE = '依存関係によりインポートできません。'
+
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -119,7 +121,7 @@ export default tseslint.config(
                 '../shiftSchedule',
                 '../shiftSchedule/**',
               ],
-              message: 'employeeは自分以外の集約をimportできない',
+              message: IMPORT_DEPENDENCY_ERROR_MESSAGE,
             },
           ],
         },
@@ -145,13 +147,108 @@ export default tseslint.config(
                 '../shiftSchedule',
                 '../shiftSchedule/**',
               ],
-              message: 'shiftTypeは自分以外の集約をimportできない',
+              message: IMPORT_DEPENDENCY_ERROR_MESSAGE,
             },
           ],
         },
       ],
     },
   },
+  // shiftSchedule
+  {
+    files: ['src/domain/aggregates/shiftSchedule/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates/employee',
+                '**/aggregates/employee/**',
+                '**/aggregates/shiftType',
+                '**/aggregates/shiftType/**',
+                '../employee',
+                '../employee/**',
+                '../shiftType',
+                '../shiftType/**',
+              ],
+              message: IMPORT_DEPENDENCY_ERROR_MESSAGE,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // shiftAssignment
+  {
+    files: ['src/domain/aggregates/shiftSchedule/shiftAssignment.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates/employee',
+                '**/aggregates/employee/**',
+                '**/aggregates/shiftType',
+                '**/aggregates/shiftType/**',
+                '**/aggregates/shiftSchedule/shiftSchedule',
+                '**/aggregates/shiftSchedule/shiftSchedule.*',
+                '**/aggregates/shiftSchedule/shiftNotice',
+                '**/aggregates/shiftSchedule/shiftNotice.*',
+                '../employee',
+                '../employee/**',
+                '../shiftType',
+                '../shiftType/**',
+                './shiftSchedule',
+                './shiftSchedule.*',
+                './shiftNotice',
+                './shiftNotice.*',
+              ],
+              message: IMPORT_DEPENDENCY_ERROR_MESSAGE,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // shiftNotice
+  {
+    files: ['src/domain/aggregates/shiftSchedule/shiftNotice.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/aggregates/employee',
+                '**/aggregates/employee/**',
+                '**/aggregates/shiftType',
+                '**/aggregates/shiftType/**',
+                '**/aggregates/shiftSchedule/shiftSchedule',
+                '**/aggregates/shiftSchedule/shiftSchedule.*',
+                '**/aggregates/shiftSchedule/shiftAssignment',
+                '**/aggregates/shiftSchedule/shiftAssignment.*',
+                '../employee',
+                '../employee/**',
+                '../shiftType',
+                '../shiftType/**',
+                './shiftSchedule',
+                './shiftSchedule.*',
+                './shiftAssignment',
+                './shiftAssignment.*',
+              ],
+              message: IMPORT_DEPENDENCY_ERROR_MESSAGE,
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // ------------------------------------------------------------
   // 値オブジェクトの設定
   // ------------------------------------------------------------
