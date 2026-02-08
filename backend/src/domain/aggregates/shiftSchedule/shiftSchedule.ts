@@ -298,6 +298,52 @@ export class ShiftSchedule {
     )
   }
 
+  /**
+   * 従業員ごとの勤務日数を集計する
+   * @returns Map<EmployeeId, number> 各従業員の勤務日数
+   *
+   * 勤務日数＝標準シフトアサイン・カスタムシフトアサインが入っている日数（休暇は除外）
+   */
+  countWorkDaysPerEmployee(): Map<EmployeeId, number> {
+    const workDaysMap = new Map<string, Set<string>>() // key: employeeId.value, value: Set<date.value>
+
+    // 標準シフトアサインの日付を集計
+    for (const assignment of this.standardShiftAssignments) {
+      const employeeIdValue = assignment.employeeId.value
+      const dateValue = assignment.date.value
+      if (!workDaysMap.has(employeeIdValue))
+        workDaysMap.set(employeeIdValue, new Set<string>())
+      workDaysMap.get(employeeIdValue)?.add(dateValue)
+    }
+
+    // カスタムシフトアサインの日付を集計
+    for (const assignment of this.customShiftAssignments) {
+      const employeeIdValue = assignment.employeeId.value
+      const dateValue = assignment.date.value
+      if (!workDaysMap.has(employeeIdValue))
+        workDaysMap.set(employeeIdValue, new Set<string>())
+      workDaysMap.get(employeeIdValue)?.add(dateValue)
+    }
+
+    // 結果を EmployeeId 毎の日数で格納
+    const result = new Map<EmployeeId, number>()
+    for (const [employeeIdValue, dateSet] of workDaysMap.entries()) {
+      // EmployeeId生成: 配列から一つ復元
+      const employeeId =
+        this.standardShiftAssignments.find(
+          (a) => a.employeeId.value === employeeIdValue
+        )?.employeeId ||
+        this.customShiftAssignments.find(
+          (a) => a.employeeId.value === employeeIdValue
+        )?.employeeId
+
+      if (employeeId) {
+        result.set(employeeId, dateSet.size)
+      }
+    }
+    return result
+  }
+
   // ================================================
   // お知らせ
   // ================================================

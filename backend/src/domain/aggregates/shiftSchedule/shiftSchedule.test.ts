@@ -666,6 +666,131 @@ describe('ShiftSchedule', () => {
     })
   })
 
+  describe('countWorkDaysPerEmployee', () => {
+    const shiftTypeId = ShiftTypeId.create()
+
+    it('アサインがない場合は空のMapを返す', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(0)
+    })
+
+    it('標準シフトアサインのみの場合、勤務日数を正しく集計する', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
+      const date3 = new ShiftAssignmentDate('2026-07-17')
+
+      schedule.assignShift(date1, employeeId, shiftTypeId)
+      schedule.assignShift(date2, employeeId, shiftTypeId)
+      schedule.assignShift(date3, employeeId, shiftTypeId)
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(1)
+      expect(result.get(employeeId)).toBe(3)
+    })
+
+    it('カスタムシフトアサインのみの場合、勤務日数を正しく集計する', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
+
+      schedule.assignShiftWithCustomTime(
+        date1,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+      schedule.assignShiftWithCustomTime(
+        date2,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(1)
+      expect(result.get(employeeId)).toBe(2)
+    })
+
+    it('標準シフトとカスタムシフトが混在する場合、同じ日は1日としてカウントする', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
+      const customStartTime = new ShiftTypeTime('09:00')
+      const customEndTime = new ShiftTypeTime('17:00')
+
+      schedule.assignShift(date1, employeeId, shiftTypeId)
+      schedule.assignShiftWithCustomTime(
+        date2,
+        employeeId,
+        customStartTime,
+        customEndTime
+      )
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(1)
+      expect(result.get(employeeId)).toBe(2)
+    })
+
+    it('複数従業員の場合、各従業員の勤務日数を正しく集計する', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId1 = EmployeeId.create()
+      const employeeId2 = EmployeeId.create()
+      const date1 = new ShiftAssignmentDate('2026-07-15')
+      const date2 = new ShiftAssignmentDate('2026-07-16')
+      const date3 = new ShiftAssignmentDate('2026-07-17')
+
+      schedule.assignShift(date1, employeeId1, shiftTypeId)
+      schedule.assignShift(date2, employeeId1, shiftTypeId)
+      schedule.assignShift(date1, employeeId2, shiftTypeId)
+      schedule.assignShift(date3, employeeId2, shiftTypeId)
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(2)
+      expect(result.get(employeeId1)).toBe(2)
+      expect(result.get(employeeId2)).toBe(2)
+    })
+
+    it('公休は勤務日数に含まれない', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId = EmployeeId.create()
+      const workDate = new ShiftAssignmentDate('2026-07-15')
+      const holidayDate = new ShiftAssignmentDate('2026-07-16')
+
+      schedule.assignShift(workDate, employeeId, shiftTypeId)
+      schedule.grantPublicHoliday(holidayDate, employeeId)
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(1)
+      expect(result.get(employeeId)).toBe(1)
+    })
+
+    it('従業員が公休のみの場合はMapに含まれない', () => {
+      const schedule = ShiftSchedule.create(validYear, validMonth)
+      const employeeId = EmployeeId.create()
+      const holidayDate = new ShiftAssignmentDate('2026-07-15')
+
+      schedule.grantPublicHoliday(holidayDate, employeeId)
+
+      const result = schedule.countWorkDaysPerEmployee()
+
+      expect(result.size).toBe(0)
+    })
+  })
+
   describe('createNotice', () => {
     it('正常にお知らせを作成できる', () => {
       const schedule = ShiftSchedule.create(validYear, validMonth)
