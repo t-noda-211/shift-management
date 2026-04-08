@@ -4,6 +4,12 @@ import {
   EmployeeType,
 } from '@/domain/valueObjects'
 
+export class InvalidFullNameError extends AggregateError {
+  constructor() {
+    super('Invalid employee full name')
+  }
+}
+
 /**
  * Employee エンティティ
  * 従業員情報を表す集約ルート
@@ -15,8 +21,8 @@ export class Employee {
     private _type: EmployeeType
   ) {}
 
-  get fullName(): string {
-    return this._fullName.value
+  get fullName(): EmployeeFullName {
+    return this._fullName
   }
 
   get type(): EmployeeType {
@@ -25,7 +31,13 @@ export class Employee {
 
   static create(fullName: string, type: EmployeeType): Employee {
     const id = EmployeeId.create()
-    return new Employee(id, new EmployeeFullName(fullName), type)
+    let fullNameObject: EmployeeFullName
+    try {
+      fullNameObject = new EmployeeFullName(fullName)
+    } catch {
+      throw new InvalidFullNameError()
+    }
+    return new Employee(id, fullNameObject, type)
   }
 
   static from(

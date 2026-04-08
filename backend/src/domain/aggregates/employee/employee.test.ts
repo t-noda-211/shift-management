@@ -4,7 +4,7 @@ import {
   EmployeeType,
 } from '@/domain/valueObjects'
 
-import { Employee } from '.'
+import { Employee, InvalidFullNameError } from '.'
 
 describe('Employee', () => {
   describe('create', () => {
@@ -12,9 +12,15 @@ describe('Employee', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
 
       expect(employee).toBeInstanceOf(Employee)
-      expect(employee.fullName).toBe('山田太郎')
+      expect(employee.fullName.value).toBe('山田太郎')
       expect(employee.type).toEqual(EmployeeType.regular())
       expect(employee.id).toBeInstanceOf(EmployeeId)
+    })
+
+    it('無効なフルネームの場合、エラーを投げる', () => {
+      expect(() => {
+        Employee.create('', EmployeeType.regular())
+      }).toThrow(InvalidFullNameError)
     })
   })
 
@@ -28,7 +34,7 @@ describe('Employee', () => {
 
       expect(employee).toBeInstanceOf(Employee)
       expect(employee.id).toBe(id)
-      expect(employee.fullName).toBe('佐藤花子')
+      expect(employee.fullName.value).toBe('佐藤花子')
       expect(employee.type).toEqual(type)
     })
   })
@@ -39,17 +45,17 @@ describe('Employee', () => {
 
       employee.updateFullName('山田花子')
 
-      expect(employee.fullName).toBe('山田花子')
+      expect(employee.fullName.value).toBe('山田花子')
     })
 
     it('複数回フルネームを更新できる', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
 
       employee.updateFullName('山田花子')
-      expect(employee.fullName).toBe('山田花子')
+      expect(employee.fullName.value).toBe('山田花子')
 
       employee.updateFullName('山田次郎')
-      expect(employee.fullName).toBe('山田次郎')
+      expect(employee.fullName.value).toBe('山田次郎')
     })
   })
 
@@ -95,7 +101,7 @@ describe('Employee', () => {
       employee.updateFullName('山田花子')
       employee.updateType(EmployeeType.dispatched())
 
-      expect(employee.fullName).toBe('山田花子')
+      expect(employee.fullName.value).toBe('山田花子')
       expect(employee.type.isDispatched()).toBe(true)
     })
   })
