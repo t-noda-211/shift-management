@@ -8,7 +8,7 @@ import {
   EmployeeFullNameDuplicatedError,
 } from './errors'
 
-export class RegisterRegularEmployeeUsecase {
+export class RegisterDispatchedEmployeeUsecase {
   private readonly employeeService: EmployeeService
 
   constructor(private readonly employeeRepository: EmployeeRepository) {
@@ -16,7 +16,7 @@ export class RegisterRegularEmployeeUsecase {
   }
 
   execute(fullName: string): Employee {
-    const type = EmployeeType.regular()
+    const type = EmployeeType.dispatched()
 
     let employee: Employee
     try {

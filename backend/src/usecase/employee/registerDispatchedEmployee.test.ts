@@ -6,7 +6,7 @@ import {
   EmployeeFullNameDuplicatedError,
   InvalidEmployeeFullNameError,
 } from './errors'
-import { RegisterRegularEmployeeUsecase } from './registerRegularEmployee'
+import { RegisterDispatchedEmployeeUsecase } from './registerDispatchedEmployee'
 
 class MockEmployeeRepository implements EmployeeRepository {
   constructor(private readonly employees: Employee[] = []) {}
@@ -27,30 +27,28 @@ class MockEmployeeRepository implements EmployeeRepository {
   }
 }
 
-describe('RegisterRegularEmployeeUsecase', () => {
+describe('RegisterDispatchedEmployeeUsecase', () => {
   describe('execute', () => {
     it('正常な場合、従業員を作成できる', () => {
       const employeeRepository = new MockEmployeeRepository()
-      const registerRegularEmployeeUsecase = new RegisterRegularEmployeeUsecase(
-        employeeRepository
-      )
+      const registerDispatchedEmployeeUsecase =
+        new RegisterDispatchedEmployeeUsecase(employeeRepository)
 
-      const employee = registerRegularEmployeeUsecase.execute('山田太郎')
+      const employee = registerDispatchedEmployeeUsecase.execute('山田太郎')
 
       expect(employee).toBeInstanceOf(Employee)
       expect(employee.fullName.value).toBe('山田太郎')
-      expect(employee.type.code).toBe('REGULAR')
+      expect(employee.type.code).toBe('DISPATCHED')
       expect(employeeRepository.getEmployeesCount()).toBe(1)
     })
 
     it('無効な場合、エラーを投げる', () => {
       const employeeRepository = new MockEmployeeRepository()
-      const registerRegularEmployeeUsecase = new RegisterRegularEmployeeUsecase(
-        employeeRepository
-      )
+      const registerDispatchedEmployeeUsecase =
+        new RegisterDispatchedEmployeeUsecase(employeeRepository)
 
       expect(() => {
-        registerRegularEmployeeUsecase.execute('')
+        registerDispatchedEmployeeUsecase.execute('')
       }).toThrow(InvalidEmployeeFullNameError)
       expect(employeeRepository.getEmployeesCount()).toBe(0)
     })
@@ -59,12 +57,11 @@ describe('RegisterRegularEmployeeUsecase', () => {
       const employeeRepository = new MockEmployeeRepository([
         Employee.create('山田太郎', EmployeeType.regular()),
       ])
-      const registerRegularEmployeeUsecase = new RegisterRegularEmployeeUsecase(
-        employeeRepository
-      )
+      const registerDispatchedEmployeeUsecase =
+        new RegisterDispatchedEmployeeUsecase(employeeRepository)
 
       expect(() => {
-        registerRegularEmployeeUsecase.execute('山田太郎')
+        registerDispatchedEmployeeUsecase.execute('山田太郎')
       }).toThrow(EmployeeFullNameDuplicatedError)
       expect(employeeRepository.getEmployeesCount()).toBe(1)
     })
