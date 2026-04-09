@@ -1,6 +1,10 @@
 import { Employee } from '@/domain/aggregates/employee'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
-import { EmployeeFullName, EmployeeType } from '@/domain/valueObjects'
+import {
+  EmployeeFullName,
+  EmployeeId,
+  EmployeeType,
+} from '@/domain/valueObjects'
 
 import {
   EmployeeFullNameDuplicatedError,
@@ -13,6 +17,10 @@ class MockEmployeeRepository implements EmployeeRepository {
 
   save(employee: Employee): void {
     this.employees.push(employee)
+  }
+
+  findById(id: EmployeeId): Employee | null {
+    return this.employees.find((employee) => employee.id.equals(id)) ?? null
   }
 
   findByFullName(fullName: EmployeeFullName): Employee | null {

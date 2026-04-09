@@ -1,11 +1,16 @@
+import { Employee } from '@/domain/aggregates/employee'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
-import { EmployeeFullName } from '@/domain/valueObjects'
 
 export class EmployeeService {
   constructor(private readonly employeeRepository: EmployeeRepository) {}
 
-  isFullNameDuplicated(fullName: EmployeeFullName): boolean {
-    const employees = this.employeeRepository.findByFullName(fullName)
-    return employees !== null
+  isFullNameDuplicated(employee: Employee): boolean {
+    const resultEmployee = this.employeeRepository.findByFullName(
+      employee.fullName
+    )
+    if (resultEmployee === null) {
+      return false
+    }
+    return !resultEmployee.id.equals(employee.id)
   }
 }

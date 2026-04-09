@@ -28,7 +28,7 @@ export class RegisterRegularEmployeeUsecase {
       throw error
     }
 
-    if (this.employeeService.isFullNameDuplicated(employee.fullName)) {
+    if (this.employeeService.isFullNameDuplicated(employee)) {
       throw new EmployeeFullNameDuplicatedError()
     }
 

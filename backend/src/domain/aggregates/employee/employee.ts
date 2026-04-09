@@ -49,7 +49,13 @@ export class Employee {
   }
 
   updateFullName(fullName: string): void {
-    this._fullName = new EmployeeFullName(fullName)
+    let fullNameObject: EmployeeFullName
+    try {
+      fullNameObject = new EmployeeFullName(fullName)
+    } catch {
+      throw new InvalidFullNameError()
+    }
+    this._fullName = fullNameObject
   }
 
   updateType(type: EmployeeType): void {

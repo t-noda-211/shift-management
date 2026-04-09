@@ -57,6 +57,13 @@ describe('Employee', () => {
       employee.updateFullName('山田次郎')
       expect(employee.fullName.value).toBe('山田次郎')
     })
+
+    it('無効なフルネームの場合、エラーを投げる', () => {
+      const employee = Employee.create('山田太郎', EmployeeType.regular())
+      expect(() => {
+        employee.updateFullName('')
+      }).toThrow(InvalidFullNameError)
+    })
   })
 
   describe('updateType', () => {
