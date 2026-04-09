@@ -1,10 +1,4 @@
-import { UsecaseError } from '@/usecase/usecaseError'
-
-export class InvalidEmployeeFullNameError extends UsecaseError {
-  constructor() {
-    super('氏名が無効な形式です')
-  }
-}
+import { UsecaseError } from '@/usecase/errors'
 
 export class EmployeeFullNameDuplicatedError extends UsecaseError {
   constructor() {

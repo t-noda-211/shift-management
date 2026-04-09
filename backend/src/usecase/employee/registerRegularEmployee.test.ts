@@ -6,10 +6,8 @@ import {
   EmployeeType,
 } from '@/domain/valueObjects'
 
-import {
-  EmployeeFullNameDuplicatedError,
-  InvalidEmployeeFullNameError,
-} from './errors'
+import { ValidationError } from '../errors'
+import { EmployeeFullNameDuplicatedError } from './errors'
 import { RegisterRegularEmployeeUsecase } from './registerRegularEmployee'
 
 class MockEmployeeRepository implements EmployeeRepository {
@@ -59,7 +57,7 @@ describe('RegisterRegularEmployeeUsecase', () => {
 
       expect(() => {
         registerRegularEmployeeUsecase.execute('')
-      }).toThrow(InvalidEmployeeFullNameError)
+      }).toThrow(ValidationError)
       expect(employeeRepository.getEmployeesCount()).toBe(0)
     })
 

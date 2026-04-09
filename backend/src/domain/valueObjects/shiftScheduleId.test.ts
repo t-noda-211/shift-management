@@ -1,4 +1,5 @@
-import { ShiftScheduleId, InvalidShiftScheduleIdError } from './shiftScheduleId'
+import { DomainValidationError } from '../errors'
+import { ShiftScheduleId } from './shiftScheduleId'
 
 describe('ShiftScheduleId', () => {
   describe('create', () => {
@@ -28,15 +29,15 @@ describe('ShiftScheduleId', () => {
     it('無効な文字列の場合、エラーを投げる', () => {
       expect(() => {
         ShiftScheduleId.from('invalid-id')
-      }).toThrow(InvalidShiftScheduleIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftScheduleId.from('')
-      }).toThrow(InvalidShiftScheduleIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftScheduleId.from('123')
-      }).toThrow(InvalidShiftScheduleIdError)
+      }).toThrow(DomainValidationError)
     })
   })
 

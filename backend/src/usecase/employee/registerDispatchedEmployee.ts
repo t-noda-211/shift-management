@@ -1,12 +1,11 @@
-import { Employee, InvalidFullNameError } from '@/domain/aggregates/employee'
+import { Employee } from '@/domain/aggregates/employee'
+import { DomainValidationError } from '@/domain/errors'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
 import { EmployeeService } from '@/domain/service/employeeService'
 import { EmployeeType } from '@/domain/valueObjects'
 
-import {
-  InvalidEmployeeFullNameError,
-  EmployeeFullNameDuplicatedError,
-} from './errors'
+import { ValidationError } from '../errors'
+import { EmployeeFullNameDuplicatedError } from './errors'
 
 export class RegisterDispatchedEmployeeUsecase {
   private readonly employeeService: EmployeeService
@@ -22,8 +21,8 @@ export class RegisterDispatchedEmployeeUsecase {
     try {
       employee = Employee.create(fullName, type)
     } catch (error) {
-      if (error instanceof InvalidFullNameError) {
-        throw new InvalidEmployeeFullNameError()
+      if (error instanceof DomainValidationError) {
+        throw new ValidationError()
       }
       throw error
     }

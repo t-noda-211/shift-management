@@ -1,13 +1,7 @@
 import { ulid, isValid as isValidUlid } from 'ulidx'
 
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftScheduleIdError extends ValueObjectError {
-  constructor() {
-    super('Invalid ShiftSchedule ID')
-  }
-}
+import { DomainValidationError } from '../errors'
 
 export class ShiftScheduleId implements ValueObject {
   private constructor(readonly value: string) {}
@@ -18,7 +12,7 @@ export class ShiftScheduleId implements ValueObject {
 
   static from(value: string) {
     if (!isValidUlid(value)) {
-      throw new InvalidShiftScheduleIdError()
+      throw new DomainValidationError('Invalid ShiftSchedule ID')
     }
     return new ShiftScheduleId(value)
   }

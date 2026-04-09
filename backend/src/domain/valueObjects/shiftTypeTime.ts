@@ -1,11 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftTypeTimeError extends ValueObjectError {
-  constructor(message: string) {
-    super(message)
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * シフトタイプの時刻を表す値オブジェクト
@@ -18,7 +12,7 @@ export class ShiftTypeTime implements ValueObject {
 
   constructor(value: string) {
     if (!ShiftTypeTime.TIME_PATTERN.test(value)) {
-      throw new InvalidShiftTypeTimeError(
+      throw new DomainValidationError(
         'Shift Type Time must be in "HH:mm" format (24-hour clock)'
       )
     }

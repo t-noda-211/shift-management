@@ -1,10 +1,11 @@
+import { DomainValidationError } from '@/domain/errors'
 import {
   EmployeeFullName,
   EmployeeId,
   EmployeeType,
 } from '@/domain/valueObjects'
 
-import { Employee, InvalidFullNameError } from '.'
+import { Employee } from '.'
 
 describe('Employee', () => {
   describe('create', () => {
@@ -20,7 +21,7 @@ describe('Employee', () => {
     it('無効なフルネームの場合、エラーを投げる', () => {
       expect(() => {
         Employee.create('', EmployeeType.regular())
-      }).toThrow(InvalidFullNameError)
+      }).toThrow(DomainValidationError)
     })
   })
 
@@ -62,7 +63,7 @@ describe('Employee', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
       expect(() => {
         employee.updateFullName('')
-      }).toThrow(InvalidFullNameError)
+      }).toThrow(DomainValidationError)
     })
   })
 

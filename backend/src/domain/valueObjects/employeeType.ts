@@ -1,5 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
+import { DomainValidationError } from '../errors'
 
 /**
  * 従業員種別の表示名の型
@@ -10,12 +10,6 @@ export type EmployeeTypeName = '社員' | '派遣'
  * 従業員種別のコードの型
  */
 export type EmployeeTypeCode = 'REGULAR' | 'DISPATCHED'
-
-export class InvalidEmployeeTypeError extends ValueObjectError {
-  constructor() {
-    super('Employee Type code must be either "REGULAR" or "DISPATCHED"')
-  }
-}
 
 /**
  * 従業員種別の値オブジェクト
@@ -44,11 +38,13 @@ export class EmployeeType implements ValueObject {
    * コード（大文字英数字）からインスタンスを生成
    * @param code 従業員種別のコード（"REGULAR" または "DISPATCHED"）
    * @returns EmployeeType インスタンス
-   * @throws InvalidEmployeeTypeError 無効なコードが指定された場合
+   * @throws DomainValidationError 無効なコードが指定された場合
    */
   static from(code: string): EmployeeType {
     if (!EmployeeType.VALID_CODES.includes(code as EmployeeTypeCode)) {
-      throw new InvalidEmployeeTypeError()
+      throw new DomainValidationError(
+        'Employee Type code must be either "REGULAR" or "DISPATCHED"'
+      )
     }
     return new EmployeeType(code as EmployeeTypeCode)
   }

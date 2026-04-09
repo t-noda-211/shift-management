@@ -1,4 +1,5 @@
-import { EmployeeId, InvalidEmployeeIdError } from './employeeId'
+import { DomainValidationError } from '../errors'
+import { EmployeeId } from './employeeId'
 
 describe('EmployeeId', () => {
   describe('create', () => {
@@ -28,15 +29,15 @@ describe('EmployeeId', () => {
     it('無効な文字列の場合、エラーを投げる', () => {
       expect(() => {
         EmployeeId.from('invalid-id')
-      }).toThrow(InvalidEmployeeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         EmployeeId.from('')
-      }).toThrow(InvalidEmployeeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         EmployeeId.from('123')
-      }).toThrow(InvalidEmployeeIdError)
+      }).toThrow(DomainValidationError)
     })
   })
 

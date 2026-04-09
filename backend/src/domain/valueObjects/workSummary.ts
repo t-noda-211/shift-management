@@ -1,11 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidWorkSummaryError extends ValueObjectError {
-  constructor(message: string) {
-    super(message)
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * 従業員ごとに勤務日数や休暇日数を集計した結果の値オブジェクト
@@ -23,7 +17,7 @@ export class WorkSummary implements ValueObject {
     // バリデーション: マップ内の日数は0以上である必要がある
     for (const [shiftType, dayCount] of Object.entries(dayCountByShiftType)) {
       if (dayCount < 0) {
-        throw new InvalidWorkSummaryError(
+        throw new DomainValidationError(
           `Shift type "${shiftType}" days must be greater than or equal to 0`
         )
       }
@@ -33,7 +27,7 @@ export class WorkSummary implements ValueObject {
       dayCountByTimeOffType
     )) {
       if (dayCount < 0) {
-        throw new InvalidWorkSummaryError(
+        throw new DomainValidationError(
           `Time off type "${timeOffType}" days must be greater than or equal to 0`
         )
       }

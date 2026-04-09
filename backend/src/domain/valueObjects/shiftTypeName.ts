@@ -1,13 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftTypeNameError extends ValueObjectError {
-  constructor() {
-    super(
-      `Shift Type Name must be between 1 and ${ShiftTypeName.MAX_LENGTH} characters`
-    )
-  }
-}
+import { DomainValidationError } from '../errors'
 
 export class ShiftTypeName implements ValueObject {
   readonly value: string
@@ -16,7 +8,9 @@ export class ShiftTypeName implements ValueObject {
 
   constructor(value: string) {
     if (value.length < 1 || value.length > ShiftTypeName.MAX_LENGTH) {
-      throw new InvalidShiftTypeNameError()
+      throw new DomainValidationError(
+        `Shift Type Name must be between 1 and ${ShiftTypeName.MAX_LENGTH} characters`
+      )
     }
     this.value = value
   }

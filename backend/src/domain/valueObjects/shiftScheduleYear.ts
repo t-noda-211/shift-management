@@ -1,13 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftScheduleYearError extends ValueObjectError {
-  constructor() {
-    super(
-      `Shift Schedule Year must be between ${ShiftScheduleYear.MIN_YEAR} and ${ShiftScheduleYear.MAX_YEAR}`
-    )
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * シフトスケジュールの年を表す値オブジェクト
@@ -24,7 +16,9 @@ export class ShiftScheduleYear implements ValueObject {
       value < ShiftScheduleYear.MIN_YEAR ||
       value > ShiftScheduleYear.MAX_YEAR
     ) {
-      throw new InvalidShiftScheduleYearError()
+      throw new DomainValidationError(
+        `Shift Schedule Year must be between ${ShiftScheduleYear.MIN_YEAR} and ${ShiftScheduleYear.MAX_YEAR}`
+      )
     }
     this.value = value
   }

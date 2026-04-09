@@ -1,11 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftScheduleMonthError extends ValueObjectError {
-  constructor() {
-    super('Shift Schedule Month must be between 1 and 12')
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * シフトスケジュールの月を表す値オブジェクト
@@ -22,7 +16,9 @@ export class ShiftScheduleMonth implements ValueObject {
       value < ShiftScheduleMonth.MIN_MONTH ||
       value > ShiftScheduleMonth.MAX_MONTH
     ) {
-      throw new InvalidShiftScheduleMonthError()
+      throw new DomainValidationError(
+        'Shift Schedule Month must be between 1 and 12'
+      )
     }
     this.value = value
   }

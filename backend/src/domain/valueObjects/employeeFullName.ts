@@ -1,13 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidEmployeeFullNameError extends ValueObjectError {
-  constructor() {
-    super(
-      `Employee Full Name must be between 1 and ${EmployeeFullName.MAX_LENGTH} characters`
-    )
-  }
-}
+import { DomainValidationError } from '../errors'
 
 export class EmployeeFullName implements ValueObject {
   readonly value: string
@@ -16,7 +8,9 @@ export class EmployeeFullName implements ValueObject {
 
   constructor(value: string) {
     if (value.length < 1 || value.length > EmployeeFullName.MAX_LENGTH) {
-      throw new InvalidEmployeeFullNameError()
+      throw new DomainValidationError(
+        `Employee Full Name must be between 1 and ${EmployeeFullName.MAX_LENGTH} characters`
+      )
     }
     this.value = value
   }

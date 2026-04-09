@@ -1,4 +1,5 @@
-import { TimeOffType, InvalidTimeOffTypeError } from './timeOffType'
+import { DomainValidationError } from '../errors'
+import { TimeOffType } from './timeOffType'
 
 describe('TimeOffType', () => {
   describe('from', () => {
@@ -19,15 +20,15 @@ describe('TimeOffType', () => {
     it('無効なコードの場合、エラーを投げる', () => {
       expect(() => {
         TimeOffType.from('INVALID')
-      }).toThrow(InvalidTimeOffTypeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         TimeOffType.from('public_holiday')
-      }).toThrow(InvalidTimeOffTypeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         TimeOffType.from('')
-      }).toThrow(InvalidTimeOffTypeError)
+      }).toThrow(DomainValidationError)
     })
   })
 

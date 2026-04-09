@@ -1,7 +1,7 @@
 import {
   ShiftAssignmentDate,
-  InvalidShiftAssignmentDateError,
 } from './shiftAssignmentDate'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftAssignmentDate', () => {
   describe('constructor', () => {
@@ -20,65 +20,65 @@ describe('ShiftAssignmentDate', () => {
     it('"YYYY-MM-DD" 形式以外の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('2024/01/15')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('24-01-15')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('2024-1-15')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('2024-01-5')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('20240115')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
 
     it('無効な月（13月以上）の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('2024-13-01')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('2024-00-01')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
 
     it('存在しない日付の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('2024-02-30')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('2024-04-31')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftAssignmentDate('2024-06-31')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
 
     it('平年の2月29日の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('2023-02-29')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
 
     it('日が0の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('2024-01-00')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
 
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftAssignmentDate('')
-      }).toThrow(InvalidShiftAssignmentDateError)
+      }).toThrow(DomainValidationError)
     })
   })
 

@@ -1,7 +1,7 @@
 import {
   ShiftNoticeTitle,
-  InvalidShiftNoticeTitleError,
 } from './shiftNoticeTitle'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftNoticeTitle', () => {
   describe('constructor', () => {
@@ -27,7 +27,7 @@ describe('ShiftNoticeTitle', () => {
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftNoticeTitle('')
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超える場合、エラーを投げる', () => {
@@ -35,7 +35,7 @@ describe('ShiftNoticeTitle', () => {
 
       expect(() => {
         new ShiftNoticeTitle(tooLongTitle)
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
     })
   })
 

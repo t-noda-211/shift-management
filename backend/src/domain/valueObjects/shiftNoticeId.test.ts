@@ -1,4 +1,5 @@
-import { ShiftNoticeId, InvalidShiftNoticeIdError } from './shiftNoticeId'
+import { DomainValidationError } from '../errors'
+import { ShiftNoticeId } from './shiftNoticeId'
 
 describe('ShiftNoticeId', () => {
   describe('create', () => {
@@ -28,15 +29,15 @@ describe('ShiftNoticeId', () => {
     it('無効な文字列の場合、エラーを投げる', () => {
       expect(() => {
         ShiftNoticeId.from('invalid-id')
-      }).toThrow(InvalidShiftNoticeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftNoticeId.from('')
-      }).toThrow(InvalidShiftNoticeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftNoticeId.from('123')
-      }).toThrow(InvalidShiftNoticeIdError)
+      }).toThrow(DomainValidationError)
     })
   })
 

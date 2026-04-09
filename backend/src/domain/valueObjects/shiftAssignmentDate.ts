@@ -1,11 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftAssignmentDateError extends ValueObjectError {
-  constructor(message: string) {
-    super(message)
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * シフトアサインの日付を表す値オブジェクト
@@ -18,7 +12,7 @@ export class ShiftAssignmentDate implements ValueObject {
 
   constructor(value: string) {
     if (!ShiftAssignmentDate.DATE_PATTERN.test(value)) {
-      throw new InvalidShiftAssignmentDateError(
+      throw new DomainValidationError(
         'Shift Assignment Date must be in "YYYY-MM-DD" format'
       )
     }
@@ -26,7 +20,7 @@ export class ShiftAssignmentDate implements ValueObject {
     // 有効な日付かどうかを検証
     const date = new Date(value + 'T00:00:00')
     if (isNaN(date.getTime())) {
-      throw new InvalidShiftAssignmentDateError(
+      throw new DomainValidationError(
         'Shift Assignment Date must be a valid date'
       )
     }
@@ -38,7 +32,7 @@ export class ShiftAssignmentDate implements ValueObject {
       date.getMonth() + 1 !== month ||
       date.getDate() !== day
     ) {
-      throw new InvalidShiftAssignmentDateError(
+      throw new DomainValidationError(
         'Shift Assignment Date must be a valid date'
       )
     }

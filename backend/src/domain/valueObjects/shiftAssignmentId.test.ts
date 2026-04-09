@@ -1,7 +1,7 @@
 import {
   ShiftAssignmentId,
-  InvalidShiftAssignmentIdError,
 } from './shiftAssignmentId'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftAssignmentId', () => {
   describe('create', () => {
@@ -31,15 +31,15 @@ describe('ShiftAssignmentId', () => {
     it('無効な文字列の場合、エラーを投げる', () => {
       expect(() => {
         ShiftAssignmentId.from('invalid-id')
-      }).toThrow(InvalidShiftAssignmentIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftAssignmentId.from('')
-      }).toThrow(InvalidShiftAssignmentIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftAssignmentId.from('123')
-      }).toThrow(InvalidShiftAssignmentIdError)
+      }).toThrow(DomainValidationError)
     })
   })
 

@@ -1,4 +1,5 @@
-import { WorkSummary, InvalidWorkSummaryError } from './workSummary'
+import { DomainValidationError } from '../errors'
+import { WorkSummary } from './workSummary'
 
 describe('WorkSummary', () => {
   describe('constructor', () => {
@@ -43,25 +44,25 @@ describe('WorkSummary', () => {
     it('dayCountByShiftTypeに負の値が含まれる場合、エラーを投げる', () => {
       expect(() => {
         new WorkSummary({ 早番: -1 }, {})
-      }).toThrow(InvalidWorkSummaryError)
+      }).toThrow(DomainValidationError)
     })
 
     it('dayCountByShiftTypeに複数の負の値が含まれる場合、エラーを投げる', () => {
       expect(() => {
         new WorkSummary({ 早番: 5, 遅番: -3 }, {})
-      }).toThrow(InvalidWorkSummaryError)
+      }).toThrow(DomainValidationError)
     })
 
     it('dayCountByTimeOffTypeに負の値が含まれる場合、エラーを投げる', () => {
       expect(() => {
         new WorkSummary({}, { 公休: -1 })
-      }).toThrow(InvalidWorkSummaryError)
+      }).toThrow(DomainValidationError)
     })
 
     it('dayCountByTimeOffTypeに複数の負の値が含まれる場合、エラーを投げる', () => {
       expect(() => {
         new WorkSummary({}, { 公休: 2, 有給: -1 })
-      }).toThrow(InvalidWorkSummaryError)
+      }).toThrow(DomainValidationError)
     })
 
     it('0の値は許可される', () => {

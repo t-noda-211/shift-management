@@ -1,4 +1,5 @@
-import { ShiftTypeId, InvalidShiftTypeIdError } from './shiftTypeId'
+import { DomainValidationError } from '../errors'
+import { ShiftTypeId } from './shiftTypeId'
 
 describe('ShiftTypeId', () => {
   describe('create', () => {
@@ -28,15 +29,15 @@ describe('ShiftTypeId', () => {
     it('無効な文字列の場合、エラーを投げる', () => {
       expect(() => {
         ShiftTypeId.from('invalid-id')
-      }).toThrow(InvalidShiftTypeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftTypeId.from('')
-      }).toThrow(InvalidShiftTypeIdError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         ShiftTypeId.from('123')
-      }).toThrow(InvalidShiftTypeIdError)
+      }).toThrow(DomainValidationError)
     })
   })
 

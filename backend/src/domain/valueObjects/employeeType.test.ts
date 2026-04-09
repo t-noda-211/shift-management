@@ -1,4 +1,5 @@
-import { EmployeeType, InvalidEmployeeTypeError } from './employeeType'
+import { DomainValidationError } from '../errors'
+import { EmployeeType } from './employeeType'
 
 describe('EmployeeType', () => {
   describe('from', () => {
@@ -19,15 +20,15 @@ describe('EmployeeType', () => {
     it('無効なコードの場合、エラーを投げる', () => {
       expect(() => {
         EmployeeType.from('INVALID')
-      }).toThrow(InvalidEmployeeTypeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         EmployeeType.from('regular')
-      }).toThrow(InvalidEmployeeTypeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         EmployeeType.from('')
-      }).toThrow(InvalidEmployeeTypeError)
+      }).toThrow(DomainValidationError)
     })
   })
 

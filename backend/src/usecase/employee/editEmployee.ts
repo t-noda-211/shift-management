@@ -1,4 +1,5 @@
-import { Employee, InvalidFullNameError } from '@/domain/aggregates/employee'
+import { Employee } from '@/domain/aggregates/employee'
+import { DomainValidationError } from '@/domain/errors'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
 import { EmployeeService } from '@/domain/service/employeeService'
 import {
@@ -7,8 +8,8 @@ import {
   EmployeeTypeCode,
 } from '@/domain/valueObjects'
 
+import { ValidationError } from '../errors'
 import {
-  InvalidEmployeeFullNameError,
   EmployeeFullNameDuplicatedError,
   EmployeeNotFoundError,
 } from './errors'
@@ -38,8 +39,8 @@ export class EditEmployeeUsecase {
       try {
         employee.updateFullName(fullName)
       } catch (error) {
-        if (error instanceof InvalidFullNameError) {
-          throw new InvalidEmployeeFullNameError()
+        if (error instanceof DomainValidationError) {
+          throw new ValidationError()
         }
         throw error
       }

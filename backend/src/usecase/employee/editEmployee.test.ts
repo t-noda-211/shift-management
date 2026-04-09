@@ -6,11 +6,11 @@ import {
   EmployeeType,
 } from '@/domain/valueObjects'
 
+import { ValidationError } from '../errors'
 import { EditEmployeeUsecase } from './editEmployee'
 import {
   EmployeeFullNameDuplicatedError,
   EmployeeNotFoundError,
-  InvalidEmployeeFullNameError,
 } from './errors'
 
 class MockEmployeeRepository implements EmployeeRepository {
@@ -123,7 +123,7 @@ describe('EditEmployeeUsecase', () => {
         const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
         expect(() => {
           editEmployeeUsecase.execute({ id: employee.id, fullName: '' })
-        }).toThrow(InvalidEmployeeFullNameError)
+        }).toThrow(ValidationError)
         expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
         expect(employeeRepository.findByFullName).not.toHaveBeenCalled()
         expect(employeeRepository.save).not.toHaveBeenCalled()

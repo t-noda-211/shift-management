@@ -1,4 +1,5 @@
-import { ShiftTypeName, InvalidShiftTypeNameError } from './shiftTypeName'
+import { DomainValidationError } from '../errors'
+import { ShiftTypeName } from './shiftTypeName'
 
 describe('ShiftTypeName', () => {
   describe('constructor', () => {
@@ -24,7 +25,7 @@ describe('ShiftTypeName', () => {
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftTypeName('')
-      }).toThrow(InvalidShiftTypeNameError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超える場合、エラーを投げる', () => {
@@ -32,7 +33,7 @@ describe('ShiftTypeName', () => {
 
       expect(() => {
         new ShiftTypeName(tooLongName)
-      }).toThrow(InvalidShiftTypeNameError)
+      }).toThrow(DomainValidationError)
     })
   })
 

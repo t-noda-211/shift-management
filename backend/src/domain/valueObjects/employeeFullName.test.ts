@@ -1,7 +1,7 @@
 import {
   EmployeeFullName,
-  InvalidEmployeeFullNameError,
 } from './employeeFullName'
+import { DomainValidationError } from '../errors'
 
 describe('EmployeeFullName', () => {
   describe('constructor', () => {
@@ -27,7 +27,7 @@ describe('EmployeeFullName', () => {
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new EmployeeFullName('')
-      }).toThrow(InvalidEmployeeFullNameError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超える場合、エラーを投げる', () => {
@@ -35,7 +35,7 @@ describe('EmployeeFullName', () => {
 
       expect(() => {
         new EmployeeFullName(tooLongName)
-      }).toThrow(InvalidEmployeeFullNameError)
+      }).toThrow(DomainValidationError)
     })
   })
 

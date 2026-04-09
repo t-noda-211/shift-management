@@ -1,13 +1,5 @@
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidShiftNoticeContentError extends ValueObjectError {
-  constructor() {
-    super(
-      `Shift Notice Content must be between 1 and ${ShiftNoticeContent.MAX_LENGTH} characters`
-    )
-  }
-}
+import { DomainValidationError } from '../errors'
 
 /**
  * シフト通知の内容を表す値オブジェクト
@@ -19,7 +11,9 @@ export class ShiftNoticeContent implements ValueObject {
 
   constructor(value: string) {
     if (value.length < 1 || value.length > ShiftNoticeContent.MAX_LENGTH) {
-      throw new InvalidShiftNoticeContentError()
+      throw new DomainValidationError(
+        `Shift Notice Content must be between 1 and ${ShiftNoticeContent.MAX_LENGTH} characters`
+      )
     }
     this.value = value
   }

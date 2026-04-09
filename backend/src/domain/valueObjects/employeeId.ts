@@ -1,13 +1,7 @@
-import { ulid, isValid as isValidUlid } from 'ulidx'
+import { isValid as isValidUlid, ulid } from 'ulidx'
 
 import type { ValueObject } from './valueObject'
-import { ValueObjectError } from './valueObjectError'
-
-export class InvalidEmployeeIdError extends ValueObjectError {
-  constructor() {
-    super('Invalid Employee ID')
-  }
-}
+import { DomainValidationError } from '../errors'
 
 export class EmployeeId implements ValueObject {
   private constructor(readonly value: string) {}
@@ -18,7 +12,7 @@ export class EmployeeId implements ValueObject {
 
   static from(value: string) {
     if (!isValidUlid(value)) {
-      throw new InvalidEmployeeIdError()
+      throw new DomainValidationError('Invalid Employee ID')
     }
     return new EmployeeId(value)
   }

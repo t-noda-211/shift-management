@@ -1,7 +1,7 @@
 import {
   ShiftScheduleMonth,
-  InvalidShiftScheduleMonthError,
 } from './shiftScheduleMonth'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftScheduleMonth', () => {
   describe('constructor', () => {
@@ -26,19 +26,19 @@ describe('ShiftScheduleMonth', () => {
     it('最小月未満の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleMonth(0)
-      }).toThrow(InvalidShiftScheduleMonthError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大月を超える場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleMonth(13)
-      }).toThrow(InvalidShiftScheduleMonthError)
+      }).toThrow(DomainValidationError)
     })
 
     it('整数でない場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleMonth(1.5)
-      }).toThrow(InvalidShiftScheduleMonthError)
+      }).toThrow(DomainValidationError)
     })
   })
 

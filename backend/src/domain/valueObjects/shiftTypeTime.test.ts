@@ -1,4 +1,5 @@
-import { ShiftTypeTime, InvalidShiftTypeTimeError } from './shiftTypeTime'
+import { DomainValidationError } from '../errors'
+import { ShiftTypeTime } from './shiftTypeTime'
 
 describe('ShiftTypeTime', () => {
   describe('constructor', () => {
@@ -23,49 +24,49 @@ describe('ShiftTypeTime', () => {
     it('"HH:mm" 形式以外の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftTypeTime('9:00')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('09:0')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('9:0')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('0900')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('09-00')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
     })
 
     it('無効な時間（24時以上）の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftTypeTime('24:00')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('25:00')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
     })
 
     it('無効な分（60分以上）の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftTypeTime('09:60')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
 
       expect(() => {
         new ShiftTypeTime('09:99')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
     })
 
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftTypeTime('')
-      }).toThrow(InvalidShiftTypeTimeError)
+      }).toThrow(DomainValidationError)
     })
   })
 

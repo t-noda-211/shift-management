@@ -1,7 +1,7 @@
 import {
   ShiftNoticeContent,
-  InvalidShiftNoticeContentError,
 } from './shiftNoticeContent'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftNoticeContent', () => {
   describe('constructor', () => {
@@ -31,7 +31,7 @@ describe('ShiftNoticeContent', () => {
     it('空文字列の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftNoticeContent('')
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超える場合、エラーを投げる', () => {
@@ -39,7 +39,7 @@ describe('ShiftNoticeContent', () => {
 
       expect(() => {
         new ShiftNoticeContent(tooLongContent)
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
     })
   })
 

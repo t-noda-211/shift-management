@@ -1,7 +1,7 @@
 import {
   ShiftScheduleYear,
-  InvalidShiftScheduleYearError,
 } from './shiftScheduleYear'
+import { DomainValidationError } from '../errors'
 
 describe('ShiftScheduleYear', () => {
   describe('constructor', () => {
@@ -26,19 +26,19 @@ describe('ShiftScheduleYear', () => {
     it('最小年未満の場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleYear(1999)
-      }).toThrow(InvalidShiftScheduleYearError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大年を超える場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleYear(2101)
-      }).toThrow(InvalidShiftScheduleYearError)
+      }).toThrow(DomainValidationError)
     })
 
     it('整数でない場合、エラーを投げる', () => {
       expect(() => {
         new ShiftScheduleYear(2026.5)
-      }).toThrow(InvalidShiftScheduleYearError)
+      }).toThrow(DomainValidationError)
     })
   })
 

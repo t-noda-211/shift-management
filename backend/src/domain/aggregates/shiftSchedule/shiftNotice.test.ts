@@ -1,11 +1,10 @@
 import {
-  InvalidShiftNoticeContentError,
-  InvalidShiftNoticeTitleError,
   ShiftNoticeContent,
   ShiftNoticeId,
   ShiftNoticeTitle,
   ShiftScheduleId,
 } from '@/domain/valueObjects'
+import { DomainValidationError } from '@/domain/errors'
 
 import { ShiftNotice } from './shiftNotice'
 
@@ -54,7 +53,7 @@ describe('ShiftNotice', () => {
     it('空文字列のタイトルの場合、エラーを投げる', () => {
       expect(() => {
         ShiftNotice.create(shiftScheduleId, '', '内容')
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超えるタイトルの場合、エラーを投げる', () => {
@@ -62,13 +61,13 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         ShiftNotice.create(shiftScheduleId, tooLongTitle, '内容')
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
     })
 
     it('空文字列の内容の場合、エラーを投げる', () => {
       expect(() => {
         ShiftNotice.create(shiftScheduleId, 'タイトル', '')
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
     })
 
     it('最大長を超える内容の場合、エラーを投げる', () => {
@@ -76,7 +75,7 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         ShiftNotice.create(shiftScheduleId, 'タイトル', tooLongContent)
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
     })
   })
 
@@ -126,7 +125,7 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         notice.updateTitle('')
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
 
       expect(notice.title).toBe('元のタイトル')
     })
@@ -137,7 +136,7 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         notice.updateTitle(tooLongTitle)
-      }).toThrow(InvalidShiftNoticeTitleError)
+      }).toThrow(DomainValidationError)
 
       expect(notice.title).toBe('元のタイトル')
     })
@@ -158,7 +157,7 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         notice.updateContent('')
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
 
       expect(notice.content).toBe('元の内容')
     })
@@ -169,7 +168,7 @@ describe('ShiftNotice', () => {
 
       expect(() => {
         notice.updateContent(tooLongContent)
-      }).toThrow(InvalidShiftNoticeContentError)
+      }).toThrow(DomainValidationError)
 
       expect(notice.content).toBe('元の内容')
     })
