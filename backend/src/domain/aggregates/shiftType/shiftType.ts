@@ -4,7 +4,7 @@ import {
   ShiftTypeTime,
 } from '@/domain/valueObjects'
 
-import { AggregateError } from '../aggregateError'
+import { AggregateError } from '../errors'
 
 /**
  * 終業時間が始業時間より前の場合のエラー

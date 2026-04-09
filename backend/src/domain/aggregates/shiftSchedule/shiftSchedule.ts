@@ -11,6 +11,7 @@ import {
 } from '@/domain/valueObjects'
 import { AppDateTime } from 'shared/appDateTime'
 
+import { AggregateError } from '../errors'
 import { CustomShiftAssignment } from './customShiftAssignment'
 import { ShiftNotice } from './shiftNotice'
 import { StandardShiftAssignment } from './standardShiftAssignment'

@@ -11,7 +11,7 @@ Express + TypeScript のバックエンドAPIサーバー
 例
 
 ```typescript
-import { ValueObjectError } from './valueObjectError'
+import { ValueObjectError } from './errors'
 
 export class InvalidEmployeeFullNameError extends ValueObjectError {
   constructor() {
