@@ -1,75 +1,73 @@
 import { Employee } from '@/domain/aggregates/employee'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
-import {
-  EmployeeFullName,
-  EmployeeId,
-  EmployeeType,
-} from '@/domain/valueObjects'
+import { EmployeeService } from '@/domain/service/employeeService'
+import { describe, expect, it, jest } from '@jest/globals'
 
 import { ValidationError } from '../errors'
 import { EmployeeFullNameDuplicatedError } from './errors'
 import { RegisterDispatchedEmployeeUsecase } from './registerDispatchedEmployee'
 
-class MockEmployeeRepository implements EmployeeRepository {
-  constructor(private readonly employees: Employee[] = []) {}
+const MockEmployeeRepository = {
+  save: jest.fn(),
+} as Partial<jest.Mocked<EmployeeRepository>> as jest.Mocked<EmployeeRepository>
 
-  save(employee: Employee): void {
-    this.employees.push(employee)
-  }
-
-  findById(id: EmployeeId): Employee | null {
-    return this.employees.find((employee) => employee.id.equals(id)) ?? null
-  }
-
-  findByFullName(fullName: EmployeeFullName): Employee | null {
-    return (
-      this.employees.find((employee) => employee.fullName.equals(fullName)) ??
-      null
-    )
-  }
-
-  getEmployeesCount(): number {
-    return this.employees.length
-  }
-}
+const MockEmployeeService = {
+  isFullNameDuplicated: jest.fn(),
+} as Partial<jest.Mocked<EmployeeService>> as jest.Mocked<EmployeeService>
 
 describe('RegisterDispatchedEmployeeUsecase', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
   describe('execute', () => {
     it('正常な場合、従業員を作成できる', () => {
-      const employeeRepository = new MockEmployeeRepository()
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
       const registerDispatchedEmployeeUsecase =
-        new RegisterDispatchedEmployeeUsecase(employeeRepository)
+        new RegisterDispatchedEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
 
       const employee = registerDispatchedEmployeeUsecase.execute('山田太郎')
 
       expect(employee).toBeInstanceOf(Employee)
       expect(employee.fullName.value).toBe('山田太郎')
       expect(employee.type.code).toBe('DISPATCHED')
-      expect(employeeRepository.getEmployeesCount()).toBe(1)
+      expect(MockEmployeeRepository.save).toHaveBeenCalledWith(employee)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+        employee
+      )
     })
 
     it('無効な場合、エラーを投げる', () => {
-      const employeeRepository = new MockEmployeeRepository()
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
       const registerDispatchedEmployeeUsecase =
-        new RegisterDispatchedEmployeeUsecase(employeeRepository)
+        new RegisterDispatchedEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
 
       expect(() => {
         registerDispatchedEmployeeUsecase.execute('')
       }).toThrow(ValidationError)
-      expect(employeeRepository.getEmployeesCount()).toBe(0)
+      expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
+      expect(MockEmployeeService.isFullNameDuplicated).not.toHaveBeenCalled()
     })
 
     it('氏名が重複している場合、エラーを投げる', () => {
-      const employeeRepository = new MockEmployeeRepository([
-        Employee.create('山田太郎', EmployeeType.regular()),
-      ])
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(true)
       const registerDispatchedEmployeeUsecase =
-        new RegisterDispatchedEmployeeUsecase(employeeRepository)
+        new RegisterDispatchedEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
 
       expect(() => {
         registerDispatchedEmployeeUsecase.execute('山田太郎')
       }).toThrow(EmployeeFullNameDuplicatedError)
-      expect(employeeRepository.getEmployeesCount()).toBe(1)
+      expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
+      // expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(employee)
     })
   })
 })

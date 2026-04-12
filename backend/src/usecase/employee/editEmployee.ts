@@ -1,6 +1,6 @@
 import { Employee } from '@/domain/aggregates/employee'
 import { DomainValidationError } from '@/domain/errors'
-import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
+import type { EmployeeRepository } from '@/domain/repositories/employeeRepository'
 import { EmployeeService } from '@/domain/service/employeeService'
 import {
   EmployeeId,
@@ -8,18 +8,22 @@ import {
   EmployeeTypeCode,
 } from '@/domain/valueObjects'
 
+import { TYPES } from '@/di/types'
+import { inject, injectable } from 'inversify'
 import { ValidationError } from '../errors'
 import {
   EmployeeFullNameDuplicatedError,
   EmployeeNotFoundError,
 } from './errors'
 
+@injectable()
 export class EditEmployeeUsecase {
-  private readonly employeeService: EmployeeService
-
-  constructor(private readonly employeeRepository: EmployeeRepository) {
-    this.employeeService = new EmployeeService(this.employeeRepository)
-  }
+  constructor(
+    @inject(TYPES.EmployeeRepository)
+    private readonly employeeRepository: EmployeeRepository,
+    @inject(TYPES.EmployeeService)
+    private readonly employeeService: EmployeeService
+  ) {}
 
   execute({
     id,

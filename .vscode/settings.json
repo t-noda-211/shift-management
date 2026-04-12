@@ -14,4 +14,8 @@
       "source.organizeImports": "explicit"
     }
   },
+  "jest.jestCommandLine": "",
+  "jest.nodeEnv": {
+    "NODE_OPTIONS": "--experimental-vm-modules",
+  }
 }

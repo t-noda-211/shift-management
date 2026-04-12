@@ -1,10 +1,8 @@
 import { Employee } from '@/domain/aggregates/employee'
 import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
-import {
-  EmployeeFullName,
-  EmployeeId,
-  EmployeeType,
-} from '@/domain/valueObjects'
+import { EmployeeService } from '@/domain/service/employeeService'
+import { EmployeeId, EmployeeType } from '@/domain/valueObjects'
+import { describe, expect, it, jest } from '@jest/globals'
 
 import { ValidationError } from '../errors'
 import { EditEmployeeUsecase } from './editEmployee'
@@ -13,20 +11,29 @@ import {
   EmployeeNotFoundError,
 } from './errors'
 
-class MockEmployeeRepository implements EmployeeRepository {
-  save = jest.fn()
-  findById = jest.fn()
-  findByFullName = jest.fn()
-}
+const MockEmployeeRepository = {
+  save: jest.fn(),
+  findById: jest.fn(),
+} as Partial<jest.Mocked<EmployeeRepository>> as jest.Mocked<EmployeeRepository>
+
+const MockEmployeeService = {
+  isFullNameDuplicated: jest.fn(),
+} as Partial<jest.Mocked<EmployeeService>> as jest.Mocked<EmployeeService>
 
 describe('EditEmployeeUsecase', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
   describe('execute', () => {
     it('氏名と従業員種別を編集できる', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
-      const employeeRepository = new MockEmployeeRepository()
-      employeeRepository.findById.mockReturnValue(employee)
-      employeeRepository.findByFullName.mockReturnValue(null)
-      const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+      MockEmployeeRepository.findById.mockReturnValue(employee)
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
+      const editEmployeeUsecase = new EditEmployeeUsecase(
+        MockEmployeeRepository,
+        MockEmployeeService
+      )
       const updatedEmployee = editEmployeeUsecase.execute({
         id: employee.id,
         fullName: '山田花子',
@@ -34,75 +41,83 @@ describe('EditEmployeeUsecase', () => {
       })
       expect(updatedEmployee.fullName.value).toBe('山田花子')
       expect(updatedEmployee.type.code).toBe('DISPATCHED')
-      expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-      expect(employeeRepository.findByFullName).toHaveBeenCalledWith(
-        new EmployeeFullName('山田花子')
+      expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(employee.id)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+        updatedEmployee
       )
-      expect(employeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
+      expect(MockEmployeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
     })
 
     it('氏名のみを編集できる', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
-      const employeeRepository = new MockEmployeeRepository()
-      employeeRepository.findById.mockReturnValue(employee)
-      employeeRepository.findByFullName.mockReturnValue(null)
-      const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+      MockEmployeeRepository.findById.mockReturnValue(employee)
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
+      const editEmployeeUsecase = new EditEmployeeUsecase(
+        MockEmployeeRepository,
+        MockEmployeeService
+      )
       const updatedEmployee = editEmployeeUsecase.execute({
         id: employee.id,
         fullName: '山田花子',
       })
       expect(updatedEmployee.fullName.value).toBe('山田花子')
       expect(updatedEmployee.type.code).toBe('REGULAR')
-      expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-      expect(employeeRepository.findByFullName).toHaveBeenCalledWith(
-        new EmployeeFullName('山田花子')
+      expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(employee.id)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+        updatedEmployee
       )
-      expect(employeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
+      expect(MockEmployeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
     })
 
     it('従業員種別のみを編集できる', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
-      const employeeRepository = new MockEmployeeRepository()
-      employeeRepository.findById.mockReturnValue(employee)
-      employeeRepository.findByFullName.mockReturnValue(null)
-      const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+      MockEmployeeRepository.findById.mockReturnValue(employee)
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
+      const editEmployeeUsecase = new EditEmployeeUsecase(
+        MockEmployeeRepository,
+        MockEmployeeService
+      )
       const updatedEmployee = editEmployeeUsecase.execute({
         id: employee.id,
         typeCode: 'DISPATCHED',
       })
       expect(updatedEmployee.fullName.value).toBe('山田太郎')
       expect(updatedEmployee.type.code).toBe('DISPATCHED')
-      expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-      expect(employeeRepository.findByFullName).toHaveBeenCalledWith(
-        new EmployeeFullName('山田太郎')
+      expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(employee.id)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+        updatedEmployee
       )
-      expect(employeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
+      expect(MockEmployeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
     })
 
     it('従業員種別が同じ場合、編集できる', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
-      const employeeRepository = new MockEmployeeRepository()
-      employeeRepository.findById.mockReturnValue(employee)
-      employeeRepository.findByFullName.mockReturnValue(null)
-      const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+      MockEmployeeRepository.findById.mockReturnValue(employee)
+      MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
+      const editEmployeeUsecase = new EditEmployeeUsecase(
+        MockEmployeeRepository,
+        MockEmployeeService
+      )
       const updatedEmployee = editEmployeeUsecase.execute({
         id: employee.id,
         typeCode: 'REGULAR',
       })
       expect(updatedEmployee.fullName.value).toBe('山田太郎')
       expect(updatedEmployee.type.code).toBe('REGULAR')
-      expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-      expect(employeeRepository.findByFullName).toHaveBeenCalledWith(
-        new EmployeeFullName('山田太郎')
+      expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(employee.id)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+        updatedEmployee
       )
-      expect(employeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
+      expect(MockEmployeeRepository.save).toHaveBeenCalledWith(updatedEmployee)
     })
 
     describe('異常系', () => {
       it('従業員が存在しない場合、エラーを投げる', () => {
-        const employeeRepository = new MockEmployeeRepository()
-        employeeRepository.findById.mockReturnValue(null)
-        const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+        MockEmployeeRepository.findById.mockReturnValue(null)
+        const editEmployeeUsecase = new EditEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
         const id = EmployeeId.create()
         expect(() => {
           editEmployeeUsecase.execute({
@@ -110,40 +125,47 @@ describe('EditEmployeeUsecase', () => {
             fullName: '山田花子',
           })
         }).toThrow(EmployeeNotFoundError)
-        expect(employeeRepository.findById).toHaveBeenCalledWith(id)
-        expect(employeeRepository.findByFullName).not.toHaveBeenCalled()
-        expect(employeeRepository.save).not.toHaveBeenCalled()
+        expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(id)
+        expect(MockEmployeeService.isFullNameDuplicated).not.toHaveBeenCalled()
+        expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
       })
 
       it('氏名が無効な場合、エラーを投げる', () => {
         const employee = Employee.create('山田太郎', EmployeeType.regular())
-        const employeeRepository = new MockEmployeeRepository()
-        employeeRepository.findById.mockReturnValue(employee)
-        employeeRepository.findByFullName.mockReturnValue(null)
-        const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+        MockEmployeeRepository.findById.mockReturnValue(employee)
+        MockEmployeeService.isFullNameDuplicated.mockReturnValue(false)
+        const editEmployeeUsecase = new EditEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
         expect(() => {
           editEmployeeUsecase.execute({ id: employee.id, fullName: '' })
         }).toThrow(ValidationError)
-        expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-        expect(employeeRepository.findByFullName).not.toHaveBeenCalled()
-        expect(employeeRepository.save).not.toHaveBeenCalled()
+        expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(
+          employee.id
+        )
+        expect(MockEmployeeService.isFullNameDuplicated).not.toHaveBeenCalled()
+        expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
       })
 
       it('氏名が重複している場合、エラーを投げる', () => {
         const employee = Employee.create('山田太郎', EmployeeType.regular())
-        const employee2 = Employee.create('山田花子', EmployeeType.regular())
-        const employeeRepository = new MockEmployeeRepository()
-        employeeRepository.findById.mockReturnValue(employee)
-        employeeRepository.findByFullName.mockReturnValue(employee2)
-        const editEmployeeUsecase = new EditEmployeeUsecase(employeeRepository)
+        MockEmployeeRepository.findById.mockReturnValue(employee)
+        MockEmployeeService.isFullNameDuplicated.mockReturnValue(true)
+        const editEmployeeUsecase = new EditEmployeeUsecase(
+          MockEmployeeRepository,
+          MockEmployeeService
+        )
         expect(() => {
           editEmployeeUsecase.execute({ id: employee.id, fullName: '山田花子' })
         }).toThrow(EmployeeFullNameDuplicatedError)
-        expect(employeeRepository.findById).toHaveBeenCalledWith(employee.id)
-        expect(employeeRepository.findByFullName).toHaveBeenCalledWith(
-          new EmployeeFullName('山田花子')
+        expect(MockEmployeeRepository.findById).toHaveBeenCalledWith(
+          employee.id
         )
-        expect(employeeRepository.save).not.toHaveBeenCalled()
+        expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(
+          employee
+        )
+        expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
       })
     })
   })

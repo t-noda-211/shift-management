@@ -1,47 +1,38 @@
+import { describe, expect, it, jest } from '@jest/globals'
+
 import { Employee } from '../aggregates/employee'
 import { EmployeeRepository } from '../repositories/employeeRepository'
-import { EmployeeFullName, EmployeeId, EmployeeType } from '../valueObjects'
+import { EmployeeType } from '../valueObjects'
 import { EmployeeService } from './employeeService'
 
-class MockEmployeeRepository implements EmployeeRepository {
-  constructor(private readonly employees: Employee[] = []) {}
-
-  save(employee: Employee): void {
-    this.employees.push(employee)
-  }
-
-  findById(id: EmployeeId): Employee | null {
-    return this.employees.find((employee) => employee.id.equals(id)) ?? null
-  }
-
-  findByFullName(fullName: EmployeeFullName): Employee | null {
-    return (
-      this.employees.find((employee) => employee.fullName.equals(fullName)) ??
-      null
-    )
-  }
-}
+const MockEmployeeRepository = {
+  findByFullName: jest.fn(),
+} as Partial<jest.Mocked<EmployeeRepository>> as jest.Mocked<EmployeeRepository>
 
 describe('EmployeeService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
   describe('isFullNameDuplicated', () => {
     it('異なるユーザーで氏名が重複している場合、trueを返す', () => {
-      const employeeRepository = new MockEmployeeRepository([
-        Employee.create('山田太郎', EmployeeType.regular()),
-      ])
-      const employeeService = new EmployeeService(employeeRepository)
+      const existingEmployee = Employee.create(
+        '山田太郎',
+        EmployeeType.regular()
+      )
+      MockEmployeeRepository.findByFullName.mockReturnValue(existingEmployee)
+      const employeeService = new EmployeeService(MockEmployeeRepository)
 
       const isDuplicated = employeeService.isFullNameDuplicated(
-        Employee.create('山田太郎', EmployeeType.regular())
+        Employee.create('山田太郎', EmployeeType.dispatched())
       )
 
       expect(isDuplicated).toBe(true)
     })
 
-    it('異なるユーザーで氏名が重複していない場合、falseを返す', () => {
-      const employeeRepository = new MockEmployeeRepository([
-        Employee.create('佐藤花子', EmployeeType.regular()),
-      ])
-      const employeeService = new EmployeeService(employeeRepository)
+    it('氏名が重複している異なるユーザーが存在しない場合、falseを返す', () => {
+      MockEmployeeRepository.findByFullName.mockReturnValue(null)
+      const employeeService = new EmployeeService(MockEmployeeRepository)
 
       const isDuplicated = employeeService.isFullNameDuplicated(
         Employee.create('山田太郎', EmployeeType.regular())
@@ -52,8 +43,8 @@ describe('EmployeeService', () => {
 
     it('同じユーザーで氏名が重複している場合、falseを返す', () => {
       const employee = Employee.create('山田太郎', EmployeeType.regular())
-      const employeeRepository = new MockEmployeeRepository([employee])
-      const employeeService = new EmployeeService(employeeRepository)
+      MockEmployeeRepository.findByFullName.mockReturnValue(employee)
+      const employeeService = new EmployeeService(MockEmployeeRepository)
 
       const isDuplicated = employeeService.isFullNameDuplicated(employee)
 
