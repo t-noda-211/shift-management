@@ -9,7 +9,7 @@ import {
   ShiftTypeTime,
   TimeOffType,
 } from '@/domain/valueObjects'
-import { AppDateTime } from 'shared/appDateTime'
+import { AppDateTime } from '@/domain/valueObjects/appDateTime'
 
 import { AggregateError } from '../errors'
 import { CustomShiftAssignment } from './customShiftAssignment'

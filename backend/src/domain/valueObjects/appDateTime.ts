@@ -1,7 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { SharedError } from './sharedError'
 
-export class InvalidAppDateTimeError extends SharedError {
+import { DomainError } from '../errors'
+
+export class InvalidAppDateTimeError extends DomainError {
   constructor() {
     super('Invalid AppDateTime')
   }
@@ -65,7 +66,7 @@ export class AppDateTime {
           second: second ?? 0,
         }).toInstant()
       )
-    } catch (error) {
+    } catch {
       throw new InvalidAppDateTimeError()
     }
   }

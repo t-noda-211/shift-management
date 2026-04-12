@@ -1,23 +1,28 @@
-import { Temporal } from '@js-temporal/polyfill'
-import { AppDateTime, InvalidAppDateTimeError } from './appDateTime'
+import { describe, expect, it, jest } from '@jest/globals'
 
-// 固定の日時を使用するためのモック
-let mockNowInstant: ReturnType<typeof Temporal.Instant.from> =
-  Temporal.Instant.from('2026-06-15T12:00:00Z')
-jest.mock('@js-temporal/polyfill', () => {
-  const actual = jest.requireActual<typeof import('@js-temporal/polyfill')>(
-    '@js-temporal/polyfill'
-  )
-  return {
-    ...actual,
-    Temporal: {
-      ...actual.Temporal,
-      Now: {
-        ...actual.Temporal.Now,
-        instant: () => mockNowInstant,
+type AppDateTimeModule = typeof import('./appDateTime')
+let AppDateTime: AppDateTimeModule['AppDateTime']
+let InvalidAppDateTimeError: AppDateTimeModule['InvalidAppDateTimeError']
+beforeAll(async () => {
+  await jest.unstable_mockModule('@js-temporal/polyfill', () => {
+    const actual = jest.requireActual<typeof import('@js-temporal/polyfill')>(
+      '@js-temporal/polyfill'
+    )
+    const mockNowInstant = actual.Temporal.Instant.from('2026-06-15T12:00:00Z')
+    return {
+      ...actual,
+      Temporal: {
+        ...actual.Temporal,
+        Now: {
+          ...actual.Temporal.Now,
+          instant: () => mockNowInstant,
+        },
       },
-    },
-  }
+    }
+  })
+  const mod = await import('./appDateTime')
+  AppDateTime = mod.AppDateTime
+  InvalidAppDateTimeError = mod.InvalidAppDateTimeError
 })
 
 describe('AppDateTime', () => {

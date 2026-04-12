@@ -7,8 +7,13 @@ import {
   ShiftTypeId,
   ShiftTypeTime,
 } from '@/domain/valueObjects'
-import { AppDateTime } from 'shared/appDateTime'
-import { setMockNow } from 'shared/testUtils/mockAppDateTime'
+import {
+  makeFuture,
+  makeUpdatedAtFuture,
+  mockNow,
+  mockNowAppDateTime,
+} from '@/testUtils/mockAppDateTime'
+import { jest } from '@jest/globals'
 
 import {
   AssignmentAlreadyExistsError,
@@ -19,23 +24,18 @@ import {
   ShiftSchedule,
 } from '.'
 
-const mockNowAppDateTime = AppDateTime.from(2026, 6, 15, 12, 0, 0)
-
-// 現在日時を未来にする
-const makeFuture = () => setMockNow(AppDateTime.from(2027, 6, 15, 12, 0, 0))
-
-// 更新日時を未来にする
-const makeUpdatedAtFuture = () =>
-  setMockNow(AppDateTime.from(2026, 6, 15, 20, 0, 0))
-
 const validYear = new ShiftScheduleYear(2026)
 const validMonth = new ShiftScheduleMonth(7)
 
-beforeEach(() => {
-  setMockNow(mockNowAppDateTime)
-})
-
 describe('ShiftSchedule', () => {
+  beforeEach(() => {
+    mockNow()
+  })
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
+
   describe('isPublished', () => {
     it('初期状態ではfalseを返す', () => {
       const schedule = ShiftSchedule.create(validYear, validMonth)
@@ -238,7 +238,9 @@ describe('ShiftSchedule', () => {
       expect(schedule.customShiftAssignments[0].customStartTime).toBe(
         customStartTime
       )
-      expect(schedule.customShiftAssignments[0].customEndTime).toBe(customEndTime)
+      expect(schedule.customShiftAssignments[0].customEndTime).toBe(
+        customEndTime
+      )
     })
 
     it('アサイン後にupdatedAtが更新される', () => {
@@ -477,9 +479,9 @@ describe('ShiftSchedule', () => {
       expect(schedule.timeOffAssignments[0].employeeId).toBe(employeeId)
       expect(schedule.timeOffAssignments[0].date).toBe(date)
       expect(schedule.timeOffAssignments[0].timeOffType).toBeTruthy()
-      expect(
-        schedule.timeOffAssignments[0].timeOffType.isPublicHoliday()
-      ).toBe(true)
+      expect(schedule.timeOffAssignments[0].timeOffType.isPublicHoliday()).toBe(
+        true
+      )
     })
 
     it('付与後にupdatedAtが更新される', () => {
