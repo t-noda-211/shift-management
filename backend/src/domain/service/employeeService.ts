@@ -1,11 +1,11 @@
 import { TYPES } from '@/di/types';
 import { Employee } from '@/domain/aggregates/employee';
-import type { EmployeeRepository } from '@/domain/repositories/employeeRepository';
+import type { IEmployeeRepository } from '@/domain/interfaces/iEmployeeRepository';
 import { inject, injectable } from 'inversify';
 
 @injectable()
 export class EmployeeService {
-  constructor(@inject(TYPES.EmployeeRepository) private readonly employeeRepository: EmployeeRepository) {}
+  constructor(@inject(TYPES.EmployeeRepository) private readonly employeeRepository: IEmployeeRepository) {}
 
   isFullNameDuplicated(employee: Employee): boolean {
     const resultEmployee = this.employeeRepository.findByFullName(

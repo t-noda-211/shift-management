@@ -1,13 +1,15 @@
 import { describe, expect, it, jest } from '@jest/globals'
 
 import { Employee } from '../aggregates/employee'
-import { EmployeeRepository } from '../repositories/employeeRepository'
+import { IEmployeeRepository } from '../interfaces/iEmployeeRepository'
 import { EmployeeType } from '../valueObjects'
 import { EmployeeService } from './employeeService'
 
 const MockEmployeeRepository = {
   findByFullName: jest.fn(),
-} as Partial<jest.Mocked<EmployeeRepository>> as jest.Mocked<EmployeeRepository>
+} as Partial<
+  jest.Mocked<IEmployeeRepository>
+> as jest.Mocked<IEmployeeRepository>
 
 describe('EmployeeService', () => {
   beforeEach(() => {

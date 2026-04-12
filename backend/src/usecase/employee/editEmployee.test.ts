@@ -1,5 +1,5 @@
 import { Employee } from '@/domain/aggregates/employee'
-import { EmployeeRepository } from '@/domain/repositories/employeeRepository'
+import { IEmployeeRepository } from '@/domain/interfaces/iEmployeeRepository'
 import { EmployeeService } from '@/domain/service/employeeService'
 import { EmployeeId, EmployeeType } from '@/domain/valueObjects'
 import { describe, expect, it, jest } from '@jest/globals'
@@ -14,7 +14,9 @@ import {
 const MockEmployeeRepository = {
   save: jest.fn(),
   findById: jest.fn(),
-} as Partial<jest.Mocked<EmployeeRepository>> as jest.Mocked<EmployeeRepository>
+} as Partial<
+  jest.Mocked<IEmployeeRepository>
+> as jest.Mocked<IEmployeeRepository>
 
 const MockEmployeeService = {
   isFullNameDuplicated: jest.fn(),

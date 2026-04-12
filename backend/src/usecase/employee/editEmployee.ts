@@ -1,6 +1,6 @@
 import { Employee } from '@/domain/aggregates/employee'
 import { DomainValidationError } from '@/domain/errors'
-import type { EmployeeRepository } from '@/domain/repositories/employeeRepository'
+import type { IEmployeeRepository } from '@/domain/interfaces/iEmployeeRepository'
 import { EmployeeService } from '@/domain/service/employeeService'
 import {
   EmployeeId,
@@ -20,7 +20,7 @@ import {
 export class EditEmployeeUsecase {
   constructor(
     @inject(TYPES.EmployeeRepository)
-    private readonly employeeRepository: EmployeeRepository,
+    private readonly employeeRepository: IEmployeeRepository,
     @inject(TYPES.EmployeeService)
     private readonly employeeService: EmployeeService
   ) {}
