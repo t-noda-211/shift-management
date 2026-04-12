@@ -69,7 +69,7 @@ describe('RegisterDispatchedEmployeeUsecase', () => {
         registerDispatchedEmployeeUsecase.execute('山田太郎')
       }).toThrow(EmployeeFullNameDuplicatedError)
       expect(MockEmployeeRepository.save).not.toHaveBeenCalled()
-      // expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalledWith(employee)
+      expect(MockEmployeeService.isFullNameDuplicated).toHaveBeenCalled()
     })
   })
 })
